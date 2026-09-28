@@ -14,3 +14,5 @@ a { text-decoration: none; }
 .product-card:hover { transform: translateY(-5px); box-shadow: 0 22px 45px rgb(30 41 59 / 12%); }
 .product-image { transition: transform .35s ease; }
 .product-card:hover .product-image { transform: scale(1.05); }
+.search-shell { box-shadow: 0 1px 6px rgb(32 33 36 / 18%); transition: box-shadow .2s ease, border-color .2s ease; }
+.search-shell:hover, .search-shell:focus-within { border-color: #c7d2fe; box-shadow: 0 2px 12px rgb(79 70 229 / 18%); }
