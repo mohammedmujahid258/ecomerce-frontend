@@ -3,21 +3,12 @@ import { Link } from "react-router-dom";
 
 function Home() {
   return (
-    <main className="min-h-screen bg-gray-100 px-6 text-center">
-      <h1 className="text-4xl font-bold text-gray-800">
-        Welcome to My Store
-      </h1>
-
-      <p className="mt-4 text-lg text-gray-600">
-        Discover amazing products at great prices
-      </p>
-
-      <Link
-        to="/products"
-        className="mt-6 inline-block rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
-      >
-        Explore Products
-      </Link>
+    <main className="store-shell">
+      <section className="hero-glow overflow-hidden px-6 py-16 sm:px-10 lg:px-16 lg:py-24"><div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_.95fr]">
+        <div><span className="mb-6 inline-flex rounded-full border border-indigo-200 bg-white/70 px-4 py-2 text-xs font-bold uppercase tracking-[.18em] text-indigo-600">Curated for your lifestyle</span><h1 className="max-w-2xl text-5xl font-black leading-[1.05] tracking-tight text-slate-950 sm:text-6xl">Find pieces that feel <span className="text-indigo-600">like you.</span></h1><p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">Thoughtfully selected essentials, made to bring a little more joy to your everyday.</p><div className="mt-8 flex flex-wrap gap-4"><Link to="/products" className="rounded-full bg-indigo-600 px-7 py-3.5 font-bold text-white shadow-xl shadow-indigo-600/25 transition hover:-translate-y-0.5 hover:bg-indigo-700">Shop the collection <span className="ml-2">→</span></Link><Link to="/register" className="rounded-full border border-slate-200 bg-white px-7 py-3.5 font-bold text-slate-700 transition hover:border-indigo-200 hover:text-indigo-600">Join the community</Link></div><div className="mt-10 flex items-center gap-8 text-sm text-slate-500"><span><strong className="block text-xl text-slate-900">4.9/5</strong>happy shoppers</span><span className="h-10 w-px bg-slate-200" /><span><strong className="block text-xl text-slate-900">24h</strong>fast dispatch</span></div></div>
+        <div className="relative mx-auto w-full max-w-lg"><div className="absolute -inset-5 rounded-[3rem] bg-indigo-200/40 blur-3xl" /><div className="soft-card relative overflow-hidden rounded-[2.5rem] bg-white p-6 sm:p-8"><div className="mb-5 flex items-center justify-between"><div><p className="text-xs font-bold uppercase tracking-widest text-indigo-500">New arrivals</p><p className="mt-1 text-xl font-extrabold text-slate-900">Your next favorite</p></div><span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-600">01 / 04</span></div><div className="grid grid-cols-2 gap-4"><div className="flex h-48 items-center justify-center rounded-2xl bg-amber-50 text-7xl shadow-inner">👜</div><div className="flex h-48 items-center justify-center rounded-2xl bg-indigo-50 text-7xl shadow-inner">👟</div><div className="flex h-32 items-center justify-center rounded-2xl bg-rose-50 text-6xl shadow-inner">⌚</div><div className="flex h-32 items-center justify-center rounded-2xl bg-emerald-50 text-6xl shadow-inner">🎧</div></div><div className="mt-5 flex items-end justify-between rounded-2xl bg-slate-900 p-5 text-white"><div><p className="text-xs font-bold uppercase tracking-widest text-indigo-300">Editor's pick</p><p className="mt-1 text-lg font-extrabold">Made for more</p></div><span className="text-3xl text-indigo-300">✦</span></div></div></div>
+      </div></section>
+      <section className="mx-auto grid max-w-7xl gap-4 px-6 py-12 sm:grid-cols-3 sm:px-10 lg:px-16">{[['✦', 'Quality first', 'Products chosen with care'], ['↗', 'Easy shopping', 'Simple, secure checkout'], ['♡', 'Made for you', 'A collection worth keeping']].map(([icon, title, copy]) => <div key={title} className="soft-card rounded-2xl p-6"><span className="text-2xl text-indigo-600">{icon}</span><h3 className="mt-4 font-bold text-slate-900">{title}</h3><p className="mt-1 text-sm text-slate-500">{copy}</p></div>)}</section>
     </main>
   );
 }
