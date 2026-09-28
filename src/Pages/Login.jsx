@@ -1,26 +1,26 @@
-import {useState} from "react";
-import axios from "axios"
-function Login(){
-    const [email,setEmail]=useState("")
-    const[password,setPassword]=useState("");
+import { useState } from "react";
+import { api } from "../api";
 
-    const handleSubmit=async(e)=>{
-        e.preventDefault();
-        try{
-          const response=await axios.post("/api/v1/auth/login",{
-            email,
-            password
-              })
-          localStorage.setItem("token",response.data.token)
-          console.log("Login response :",response.data)
-        }
-        catch(error){
-          console.log("Login error :",error.response?.data)
+function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-        }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    };
-  
+    try {
+      const response = await api.post("/auth/login", {
+        email,
+        password,
+      });
+
+      localStorage.setItem("token", response.data.token);
+
+      console.log("Login response:", response.data);
+    } catch (error) {
+      console.log("Login error:", error.response?.data);
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-6">
