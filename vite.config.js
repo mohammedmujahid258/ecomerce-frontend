@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+
   server: {
     proxy: {
       "/api": {
@@ -11,5 +12,9 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+  },
+
+  preview: {
+    allowedHosts: ["ecomerce-frontend-pi02.onrender.com"],
   },
 })
