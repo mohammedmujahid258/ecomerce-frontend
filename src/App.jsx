@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 import Navbar from "./Components/Navbar";
+import Footer from "./Components/Footer";
 import ProtectedRoute from "./Components/ProtectedRoute.jsx";
 
 import Home from "./Pages/Home.jsx";
@@ -23,7 +24,18 @@ import AdminUsers from "./Pages/AdminUsers.jsx";
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
+      <AppContent />
+    </BrowserRouter>
+  );
+}
+
+function AppContent() {
+  const location = useLocation();
+  const isAuthPage = ["/login", "/register"].includes(location.pathname);
+
+  return (
+    <>
+      {!isAuthPage && <Navbar />}
 
       <Routes>
         {/* Public routes */}
@@ -116,7 +128,9 @@ function App() {
         />
 
       </Routes>
-    </BrowserRouter>
+
+      {!isAuthPage && <Footer />}
+    </>
   );
 }
 
