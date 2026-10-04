@@ -11,19 +11,22 @@ function Products() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
+  const initialCategory = searchParams.get("category") || "All";
 
   // Filter & Search States
   const [searchInput, setSearchInput] = useState(initialSearch);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [priceRange, setPriceRange] = useState("all");
   const [sortBy, setSortBy] = useState("default");
 
-  // Keep search in sync if URL param changes
+  // Keep search & category in sync if URL param changes
   useEffect(() => {
     const urlSearch = searchParams.get("search") || "";
+    const urlCat = searchParams.get("category") || "All";
     setSearchInput(urlSearch);
     setSearchQuery(urlSearch);
+    setSelectedCategory(urlCat);
   }, [searchParams]);
 
   useEffect(() => {

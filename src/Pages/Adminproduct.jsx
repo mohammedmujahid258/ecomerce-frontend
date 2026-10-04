@@ -1,9 +1,9 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 
 function AdminProducts() {
-  const [products, setProducts] = useState("");
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [name,setName]=useState("");
@@ -12,7 +12,11 @@ function AdminProducts() {
   const[stock,setStock]=useState("")
   const[category,setCategory]=useState("")
   const[image,setImage]=useState(null)
-  const[editingProduct,setEditingProduct]=useState(null)
+  const[editingProduct,setEditingProduct]=useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("default");
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -31,6 +35,54 @@ function AdminProducts() {
 
     fetchProducts();
   }, []);
+
+  const categories = useMemo(() => {
+    if (!Array.isArray(products)) return ["all"];
+    const cats = new Set();
+    products.forEach((p) => {
+      if (p.category && p.category.trim()) cats.add(p.category.trim());
+    });
+    return ["all", ...Array.from(cats)];
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    if (!Array.isArray(products)) return [];
+    return products
+      .filter((product) => {
+        if (searchTerm.trim()) {
+          const query = searchTerm.toLowerCase().trim();
+          const nameMatch = (product.name || "").toLowerCase().includes(query);
+          const descMatch = (product.description || "").toLowerCase().includes(query);
+          const catMatch = (product.category || "").toLowerCase().includes(query);
+          if (!nameMatch && !descMatch && !catMatch) return false;
+        }
+
+        if (selectedCategory !== "all") {
+          const cat = (product.category || "").toLowerCase().trim();
+          if (cat !== selectedCategory.toLowerCase().trim()) return false;
+        }
+
+        if (stockFilter === "in-stock" && (Number(product.stock) || 0) <= 0) return false;
+        if (stockFilter === "low-stock" && ((Number(product.stock) || 0) <= 0 || (Number(product.stock) || 0) > 5)) return false;
+        if (stockFilter === "out-of-stock" && (Number(product.stock) || 0) > 0) return false;
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === "price-low") return (Number(a.price) || 0) - (Number(b.price) || 0);
+        if (sortBy === "price-high") return (Number(b.price) || 0) - (Number(a.price) || 0);
+        if (sortBy === "stock-low") return (Number(a.stock) || 0) - (Number(b.stock) || 0);
+        if (sortBy === "stock-high") return (Number(b.stock) || 0) - (Number(a.stock) || 0);
+        if (sortBy === "name-asc") return (a.name || "").localeCompare(b.name || "");
+        return 0;
+      });
+  }, [products, searchTerm, selectedCategory, stockFilter, sortBy]);
+
+  const hasActiveFilters =
+    Boolean(searchTerm.trim()) ||
+    selectedCategory !== "all" ||
+    stockFilter !== "all" ||
+    sortBy !== "default";
   const handleAddProduct=async()=>{
     try{
       const formData=new FormData();
@@ -306,14 +358,126 @@ function AdminProducts() {
         </div>
       )}
 
+      {/* Search & Filter Toolbar */}
+      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-md">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+              🔍
+            </span>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search products by name, description, or category..."
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-9 text-sm text-gray-800 placeholder-gray-400 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-200"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Results Badge */}
+          <span className="text-xs font-semibold text-gray-600">
+            Showing <strong className="text-gray-900">{filteredProducts.length}</strong> of {products.length} products
+          </span>
+        </div>
+
+        {/* Filter Controls Row */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 text-xs">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Category Dropdown */}
+            <div className="flex items-center gap-2">
+              <label htmlFor="admin-cat-filter" className="font-bold text-gray-600">
+                Category:
+              </label>
+              <select
+                id="admin-cat-filter"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 font-semibold text-gray-700 outline-none focus:border-amber-400"
+              >
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c === "all" ? "All Categories" : c}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Stock Filter */}
+            <div className="flex items-center gap-2">
+              <label htmlFor="admin-stock-filter" className="font-bold text-gray-600">
+                Stock:
+              </label>
+              <select
+                id="admin-stock-filter"
+                value={stockFilter}
+                onChange={(e) => setStockFilter(e.target.value)}
+                className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 font-semibold text-gray-700 outline-none focus:border-amber-400"
+              >
+                <option value="all">All Stock Status</option>
+                <option value="in-stock">In Stock (&gt; 0)</option>
+                <option value="low-stock">Low Stock (≤ 5)</option>
+                <option value="out-of-stock">Out of Stock (0)</option>
+              </select>
+            </div>
+
+            {/* Sort Filter */}
+            <div className="flex items-center gap-2">
+              <label htmlFor="admin-sort-filter" className="font-bold text-gray-600">
+                Sort By:
+              </label>
+              <select
+                id="admin-sort-filter"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 font-semibold text-gray-700 outline-none focus:border-amber-400"
+              >
+                <option value="default">Default / Newest</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="stock-low">Stock: Low to High</option>
+                <option value="stock-high">Stock: High to Low</option>
+                <option value="name-asc">Name: A to Z</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Reset Filters */}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedCategory("all");
+                setStockFilter("all");
+                setSortBy("default");
+              }}
+              className="font-bold text-rose-600 hover:underline cursor-pointer flex items-center gap-1"
+            >
+              <span>✕</span>
+              <span>Reset Filters</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Product List */}
-      {products.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <p className="text-gray-600">
-          No products found.
+          No products found matching filters.
         </p>
       ) : (
         <div className="grid gap-6 md:grid-cols-3">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <div
               key={product._id}
               className="rounded-xl bg-white p-5 shadow-md"
