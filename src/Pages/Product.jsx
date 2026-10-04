@@ -315,21 +315,25 @@ function Products() {
                 className="product-card soft-card overflow-hidden rounded-2xl p-3 flex flex-col justify-between shadow-sm transition hover:-translate-y-1 hover:shadow-md"
               >
                 <div>
-                  <div
+                  <Link
+                    to={`/products/${product._id}`}
                     style={{ backgroundColor: getProductCardColor(product) }}
-                    className="overflow-hidden rounded-xl"
+                    className="relative block overflow-hidden rounded-xl"
                   >
+                    <span className="absolute top-2 left-2 z-10 rounded-md bg-[#e11d48] px-1.5 py-0.5 text-[10px] font-black text-white shadow-sm">
+                      -18%
+                    </span>
                     <ProductImage
                       src={product.image}
                       alt={product.name}
-                      className="product-image h-48 w-full object-contain p-3"
+                      className="product-image h-48 w-full object-contain p-3 transition duration-300 hover:scale-105"
                     />
-                  </div>
+                  </Link>
 
                   <div className="mt-3 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5">
                       <span className="tracking-[.1em] text-[#e0ad00]">★★★★★</span>
-                      <span className="text-slate-500">{product.rating ?? "4.8"}</span>
+                      <span className="text-slate-500 font-medium">{product.rating ?? "4.8"}</span>
                     </div>
                     {product.category && (
                       <span className="rounded-md bg-white/80 px-2 py-0.5 text-[10px] font-bold text-slate-600">
@@ -338,24 +342,25 @@ function Products() {
                     )}
                   </div>
 
-                  <h2 className="mb-1 mt-2 text-sm sm:text-base font-bold text-slate-900 truncate">
-                    {product.name}
-                  </h2>
+                  <Link to={`/products/${product._id}`}>
+                    <h2 className="mb-1 mt-2 text-sm sm:text-base font-bold text-slate-900 truncate hover:text-[#a48500] transition">
+                      {product.name}
+                    </h2>
+                  </Link>
                   <p className="mb-3 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">
                     {product.description || "Thoughtfully selected for everyday living."}
                   </p>
                 </div>
 
-                <div>
-                  <p className="mb-3 text-base sm:text-lg font-black text-slate-900">
-                    ₹{product.price}
-                  </p>
-                  <Link
-                    to={`/products/${product._id}`}
-                    className="inline-block w-full rounded-xl bg-[#202016] px-3 py-2.5 text-center text-xs font-bold text-white transition hover:bg-[#e7b900] hover:text-[#202016]"
-                  >
-                    View Details
-                  </Link>
+                <div className="mt-auto pt-3 border-t border-black/5 flex items-center justify-between gap-2">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-base sm:text-lg font-black text-slate-900">
+                      ₹{product.price}
+                    </span>
+                    <span className="text-[11px] text-slate-400 line-through">
+                      ₹{Math.round(product.price * 1.25)}
+                    </span>
+                  </div>
                   <ProductActions productId={product._id} />
                 </div>
               </div>

@@ -180,7 +180,7 @@ function ProductDetails() {
           <p className="mt-2 text-gray-600">Category: {product.category || "-"}</p>
           <p className="mt-2 text-gray-600">Stock: {product.stock ?? 0}</p>
           <div className="mt-6 max-w-xs">
-            <ProductActions productId={product._id} />
+            <ProductActions productId={product._id} showText={true} />
           </div>
         </div>
       </div>
