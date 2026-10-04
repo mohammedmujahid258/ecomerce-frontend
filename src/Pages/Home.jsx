@@ -4,6 +4,7 @@ import { api } from "../api";
 import heroImage from "../assets/ecommerce-hero.jpg";
 import { getProductCardColor } from "../Components/productTheme";
 import ProductImage from "../Components/ProductImage";
+import ProductActions from "../Components/ProductActions";
 
 const categories = ["All products", "Fashion", "Accessories", "Lifestyle", "Best sellers"];
 const promises = [["01", "Quality first", "Thoughtful products selected for everyday life."], ["02", "Easy shopping", "A simple, secure experience from start to finish."], ["03", "Made for you", "Fresh finds and considered essentials, always."]];
@@ -20,6 +21,7 @@ function ProductTile({ product }) {
       <h3 className="mt-2 truncate font-bold text-[#202016]">{product.name}</h3>
       <p className="mt-1 line-clamp-1 text-xs text-slate-500">{product.description || "Thoughtfully selected for everyday living."}</p>
       <p className="mt-3 font-black text-[#202016]">₹{product.price}</p>
+      <ProductActions productId={product._id} />
     </div>
   </Link>;
 }

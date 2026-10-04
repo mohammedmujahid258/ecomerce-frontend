@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import { getProductCardColor } from "../Components/productTheme";
 import ProductImage from "../Components/ProductImage";
+import ProductActions from "../Components/ProductActions";
 
 function Products() {
   const [products, setProducts] = useState([]);
@@ -355,6 +356,7 @@ function Products() {
                   >
                     View Details
                   </Link>
+                  <ProductActions productId={product._id} />
                 </div>
               </div>
             ))}

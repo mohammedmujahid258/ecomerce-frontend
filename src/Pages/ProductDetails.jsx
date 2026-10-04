@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api";
+import ProductActions from "../Components/ProductActions";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -178,6 +179,9 @@ function ProductDetails() {
           <p className="mt-6 text-2xl font-semibold">Price: ₹{product.price}</p>
           <p className="mt-2 text-gray-600">Category: {product.category || "-"}</p>
           <p className="mt-2 text-gray-600">Stock: {product.stock ?? 0}</p>
+          <div className="mt-6 max-w-xs">
+            <ProductActions productId={product._id} />
+          </div>
         </div>
       </div>
 
