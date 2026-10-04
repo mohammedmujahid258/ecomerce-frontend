@@ -11,25 +11,28 @@ function Products() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
-  const initialCategory = searchParams.get("category") || "All";
 
   // Filter & Search States
   const [searchInput, setSearchInput] = useState(initialSearch);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [priceRange, setPriceRange] = useState("all");
   const [sortBy, setSortBy] = useState("default");
 
-  // Keep search & category in sync if URL param changes
+  // Keep search in sync if URL param changes
   useEffect(() => {
     const urlSearch = searchParams.get("search") || "";
-    const urlCat = searchParams.get("category") || "All";
+    const urlCategory = searchParams.get("category") || "All";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearchInput(urlSearch);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearchQuery(urlSearch);
-    setSelectedCategory(urlCat);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedCategory(urlCategory);
   }, [searchParams]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     api
       .get("/products")
@@ -188,7 +191,13 @@ function Products() {
               <button
                 key={cat}
                 type="button"
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  const nextParams = {};
+                  if (searchQuery.trim()) nextParams.search = searchQuery.trim();
+                  if (cat !== "All") nextParams.category = cat;
+                  setSearchParams(nextParams);
+                }}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition cursor-pointer ${
                   selectedCategory.toLowerCase() === cat.toLowerCase()
                     ? "bg-[#202016] text-white shadow-sm"

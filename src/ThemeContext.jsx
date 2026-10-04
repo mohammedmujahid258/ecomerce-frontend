@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from "react";
 import { applyTheme, DEFAULT_THEME_ID, getTheme, themes } from "./theme";
 
@@ -58,4 +59,3 @@ export function useTheme() {
   }
   return context;
 }
-

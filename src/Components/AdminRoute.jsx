@@ -56,7 +56,10 @@ function AdminRoute({ children }) {
 
   useEffect(() => {
     if (!token) {
+      // This effect synchronizes the guard state with the current auth token.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsAdmin(false);
       return;
     }
