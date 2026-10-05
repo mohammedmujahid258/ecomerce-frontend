@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import heroImage from "../assets/ecommerce-hero.jpg";
 import { getProductCardColor } from "../Components/productTheme";
@@ -126,7 +126,18 @@ function ProductTile({ product }) {
 }
 
 function Home() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [heroSearch, setHeroSearch] = useState("");
+
+  const handleHeroSearch = (e) => {
+    e.preventDefault();
+    if (heroSearch.trim()) {
+      navigate(`/products?search=${encodeURIComponent(heroSearch.trim())}`);
+    } else {
+      navigate("/products");
+    }
+  };
 
   useEffect(() => {
     api.get("/products").then(({ data }) => setProducts((data.products ?? []).slice(0, 8))).catch(() => setProducts([]));
@@ -141,7 +152,28 @@ function Home() {
           <p className="text-xs font-black uppercase tracking-[.22em] text-[#a48500]">The everyday edit</p>
           <h1 className="mt-4 max-w-lg text-4xl font-black uppercase leading-[.92] tracking-[-.05em] text-[#202016] sm:text-6xl">Elevate your<br /><span className="text-[#a48500]">everyday.</span></h1>
           <p className="mt-5 max-w-md text-sm leading-6 text-[#514810] sm:text-base">Curated fashion, accessories and lifestyle essentials that bring a little more intention to every day.</p>
-          <Link to="/products" className="mt-7 inline-flex rounded-full bg-[#202016] px-6 py-3 text-xs font-black uppercase tracking-wide text-white transition hover:bg-[#e7b900] hover:text-[#202016]">Shop the collection</Link>
+
+          {/* Prominent Search Bar on Home for Mobile & Desktop */}
+          <form onSubmit={handleHeroSearch} className="mt-6 flex w-full max-w-md items-center gap-2">
+            <div className="relative flex-1">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400">🔍</span>
+              <input
+                type="text"
+                value={heroSearch}
+                onChange={(e) => setHeroSearch(e.target.value)}
+                placeholder="Search products, brands, categories..."
+                className="w-full rounded-full border border-[#d7c66e] bg-white py-2.5 pl-10 pr-4 text-xs sm:text-sm text-slate-800 shadow-sm outline-none transition focus:border-[#202016] focus:ring-2 focus:ring-[#f6ce25]"
+              />
+            </div>
+            <button
+              type="submit"
+              className="rounded-full bg-[#202016] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-white transition hover:bg-[#e7b900] hover:text-[#202016] shadow-sm cursor-pointer shrink-0"
+            >
+              Search
+            </button>
+          </form>
+
+          <Link to="/products" className="mt-5 inline-flex rounded-full bg-[#202016] px-6 py-3 text-xs font-black uppercase tracking-wide text-white transition hover:bg-[#e7b900] hover:text-[#202016]">Shop the collection</Link>
 
           <div className="mt-8 flex flex-wrap items-center gap-4 text-xs font-bold text-[#514810]">
             <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-[#a48500]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg> Premium Quality</span>

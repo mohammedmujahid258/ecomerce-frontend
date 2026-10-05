@@ -149,7 +149,7 @@ function Products() {
         {/* Search & Filter Controls Bar */}
         <div className="mb-8 rounded-2xl border border-amber-200/80 bg-white p-4 sm:p-5 shadow-[0_8px_30px_rgb(32_32_22/6%)]">
           {/* Row 1: Search Bar & Search Button */}
-          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2.5">
+          <form onSubmit={handleSearchSubmit} className="flex gap-2">
             <div className="relative flex-1">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400">
                 🔍
@@ -159,7 +159,7 @@ function Products() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search products by name, description, or category..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-[#e7b900] focus:bg-white focus:ring-4 focus:ring-[#fff0a8]"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2.5 pl-10 pr-9 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-[#e7b900] focus:bg-white focus:ring-4 focus:ring-[#fff0a8]"
               />
               {searchInput && (
                 <button
@@ -178,7 +178,7 @@ function Products() {
 
             <button
               type="submit"
-              className="rounded-xl bg-[#202016] px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow transition hover:bg-[#e7b900] hover:text-[#202016] cursor-pointer flex items-center justify-center gap-2"
+              className="rounded-xl bg-[#202016] px-4 sm:px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow transition hover:bg-[#e7b900] hover:text-[#202016] cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
             >
               <span>Search</span>
               <span>→</span>
