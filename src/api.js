@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const api = axios.create({
-baseURL: "https://ecomerce2-backend-1.onrender.com/api/v1",
+baseURL: "https://ecomerce2-backend-2.onrender.com/api/v1",
 });
 
 api.interceptors.request.use((config) => {
@@ -13,5 +13,4 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
-
 

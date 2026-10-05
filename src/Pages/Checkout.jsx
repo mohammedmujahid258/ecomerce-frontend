@@ -34,6 +34,7 @@ function Checkout() {
   const [discount, setDiscount] = useState(0);
   const [finalAmount, setFinalAmount] = useState(null);
   const [couponMessage, setCouponMessage] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("RAZORPAY");
 
   useEffect(() => {
     api.get("/cart")
@@ -97,54 +98,52 @@ function Checkout() {
     setProcessing(true);
     setPageError("");
     try {
-      if (!(await loadRazorpayScript())) throw new Error("Razorpay Checkout could not be loaded.");
-
       const orderResponse = await api.post("/orders/create", {
-        addressId: selectedAddress._id,
         couponCode: couponCode.trim() || undefined,
       });
       const order = orderResponse.data?.order;
       if (!order?._id) throw new Error("The order could not be created.");
 
-      // This endpoint must create the Razorpay order on the backend.
-      const paymentResponse = await api.post("/payments/razorpay/create", { orderId: order._id });
-      const payment = paymentResponse.data;
-      const razorpayOrderId = payment.razorpayOrderId || payment.orderId || payment.id;
-      const keyId = payment.keyId || payment.key;
-      if (!razorpayOrderId || !keyId || !payment.amount) {
-        throw new Error("The payment server returned incomplete Razorpay details.");
-      }
+      const paymentResponse = await api.post("/payments", {
+        orderId: order._id,
+        paymentMethod,
+      });
+      const payment = paymentResponse.data?.payment;
+      if (!payment?._id) throw new Error("The payment could not be created.");
 
-      const razorpay = new window.Razorpay({
-        key: keyId,
-        amount: payment.amount,
-        currency: payment.currency || "INR",
-        name: "E-commerce Store",
-        description: `Payment for order ${order._id}`,
-        order_id: razorpayOrderId,
-        prefill: { name, contact: phone },
-        theme: { color: "#2563eb" },
-        handler: async (result) => {
-          try {
-            await api.post("/payments/razorpay/verify", {
-              orderId: order._id,
-              razorpay_order_id: result.razorpay_order_id,
-              razorpay_payment_id: result.razorpay_payment_id,
-              razorpay_signature: result.razorpay_signature,
-            });
-            navigate("/orders");
-          } catch (error) {
-            setPageError(error.response?.data?.message || "Payment verification failed. Contact support.");
-            setProcessing(false);
-          }
-        },
-        modal: { ondismiss: () => setProcessing(false) },
-      });
-      razorpay.on("payment.failed", (response) => {
-        setPageError(response.error?.description || "Payment failed. Please try again.");
-        setProcessing(false);
-      });
-      razorpay.open();
+      if (paymentMethod === "RAZORPAY") {
+        if (!(await loadRazorpayScript())) throw new Error("Razorpay Checkout could not be loaded.");
+        const gateway = paymentResponse.data?.razorpay;
+        if (!gateway?.orderId || !gateway?.keyId || !gateway?.amount) throw new Error("Online payment is not configured correctly.");
+        const razorpay = new window.Razorpay({
+          key: gateway.keyId,
+          amount: gateway.amount,
+          currency: gateway.currency,
+          name: "E-commerce Store",
+          description: `Payment for order ${order._id}`,
+          order_id: gateway.orderId,
+          prefill: { name, contact: phone },
+          theme: { color: "#2563eb" },
+          handler: async (result) => {
+            try {
+              await api.post("/payments/razorpay/verify", { orderId: order._id, ...result });
+              navigate("/orders");
+            } catch (error) {
+              setPageError(error.response?.data?.message || "Payment verification failed.");
+              setProcessing(false);
+            }
+          },
+          modal: { ondismiss: () => setProcessing(false) },
+        });
+        razorpay.on("payment.failed", (response) => {
+          setPageError(response.error?.description || "Payment failed. Please try again.");
+          setProcessing(false);
+        });
+        razorpay.open();
+      } else {
+        await api.post(`/payments/${payment._id}/mock-success`);
+        navigate("/orders");
+      }
     } catch (error) {
       setPageError(error.response?.data?.message || error.message || "Unable to start payment.");
       setProcessing(false);
@@ -189,8 +188,20 @@ function Checkout() {
             {couponMessage && <p className="mt-2 text-sm text-green-600">{couponMessage}</p>}
           </div>
 
+          <div className="mt-6 rounded-lg border p-6">
+            <h2 className="mb-4 text-xl font-bold">Payment method</h2>
+            <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3">
+              <input type="radio" name="paymentMethod" value="RAZORPAY" checked={paymentMethod === "RAZORPAY"} onChange={(event) => setPaymentMethod(event.target.value)} />
+              <span><strong>Pay securely online</strong><small className="block text-gray-500">UPI, cards and net banking via Razorpay</small></span>
+            </label>
+            <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-lg border p-3">
+              <input type="radio" name="paymentMethod" value="COD" checked={paymentMethod === "COD"} onChange={(event) => setPaymentMethod(event.target.value)} />
+              <span><strong>Cash on delivery</strong><small className="block text-gray-500">Pay when your order arrives</small></span>
+            </label>
+          </div>
+
           <div className="mt-6 rounded-lg border p-6"><h2 className="mb-4 text-xl font-bold">Order Summary</h2><div className="flex justify-between"><span>Subtotal</span><span>₹{totalPrice}</span></div><div className="mt-2 flex justify-between"><span>Discount</span><span>- ₹{discount}</span></div><hr className="my-3" /><div className="flex justify-between text-lg font-bold"><span>Total</span><span>₹{payableAmount}</span></div></div>
-          <button type="button" onClick={handlePlaceOrder} disabled={processing || !selectedAddress} className="mt-6 w-full rounded-lg bg-green-600 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{processing ? "Opening secure payment..." : `Pay ₹${payableAmount}`}</button>
+          <button type="button" onClick={handlePlaceOrder} disabled={processing || !selectedAddress} className="mt-6 w-full rounded-lg bg-green-600 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{processing ? "Processing payment..." : paymentMethod === "COD" ? "Place order" : `Pay ₹${payableAmount}`}</button>
         </div>
       </div>
     </div>

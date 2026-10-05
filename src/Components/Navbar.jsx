@@ -41,7 +41,7 @@ function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 px-5 py-4 backdrop-blur-md sm:px-8">
+    <nav className="relative sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 px-5 py-4 pb-16 backdrop-blur-md sm:px-8 md:pb-4">
       <div className="mx-auto flex max-w-7xl items-center justify-between">
         <Link to="/" className="flex items-center gap-3 shrink-0" onClick={() => setMenuOpen(false)}>
           <span className="brand-mark">M</span>
@@ -77,13 +77,20 @@ function Navbar() {
         >
           <span className="text-xl">{menuOpen ? "×" : "☰"}</span>
         </button>
+        <form onSubmit={handleNavSearch} className="absolute left-5 right-16 top-full mt-3 flex md:hidden">
+          <div className="relative w-full">
+            <input type="text" value={navSearch} onChange={(e) => setNavSearch(e.target.value)} placeholder="Search products..." aria-label="Search products" className="w-full rounded-full border border-slate-300 bg-white py-2.5 pl-9 pr-20 text-sm text-slate-800 placeholder-slate-400 outline-none shadow-sm focus:border-[#e7b900] focus:ring-2 focus:ring-[#fff0a8]" />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400" aria-hidden="true">🔍</span>
+            <button type="submit" className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-[#202016] px-3.5 py-1.5 text-[11px] font-bold text-white">Search</button>
+          </div>
+        </form>
         <div
           className={`${
             menuOpen ? "flex" : "hidden"
           } absolute left-0 top-full w-full flex-col gap-4 border-b border-[#202016] bg-[#e7b900] p-5 md:static md:flex md:w-auto md:flex-row md:items-center md:border-0 md:bg-transparent md:p-0`}
         >
           {/* Mobile Search Bar */}
-          <form onSubmit={handleNavSearch} className="flex md:hidden items-center w-full mb-1">
+          <form onSubmit={handleNavSearch} className="hidden">
             <div className="relative w-full">
               <input
                 type="text"
