@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import heroImage from "../assets/ecommerce-hero.jpg";
 import { getProductCardColor } from "../Components/productTheme";
@@ -127,13 +127,46 @@ function ProductTile({ product }) {
 
 function Home() {
   const [products, setProducts] = useState([]);
+  const [homeSearch, setHomeSearch] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     api.get("/products").then(({ data }) => setProducts((data.products ?? []).slice(0, 8))).catch(() => setProducts([]));
   }, []);
 
+  const handleHomeSearch = (e) => {
+    e.preventDefault();
+    if (homeSearch.trim()) {
+      navigate(`/products?search=${encodeURIComponent(homeSearch.trim())}`);
+    } else {
+      navigate("/products");
+    }
+  };
+
   return <main className="store-shell bg-[#fffdf7]">
     <div className="bg-[#202016] px-6 py-2 text-center text-[11px] font-bold uppercase tracking-[.14em] text-white">Free shipping on orders over ₹999 <span className="mx-2 text-[#e7b900]">•</span> New season, new energy</div>
+
+    {/* Home Page Search Bar - prominently visible on mobile and desktop */}
+    <div className="bg-[#fff7d6] border-b border-[#e8d36b]/50 px-4 py-3 sm:px-8">
+      <form onSubmit={handleHomeSearch} className="mx-auto max-w-xl">
+        <div className="relative flex items-center">
+          <input
+            type="text"
+            value={homeSearch}
+            onChange={(e) => setHomeSearch(e.target.value)}
+            placeholder="Search clothes, shoes, bags, electronics..."
+            className="w-full rounded-full border-2 border-[#202016] bg-white py-2.5 pl-10 pr-24 text-xs sm:text-sm text-[#202016] shadow-sm outline-none placeholder:text-gray-400 focus:border-[#a48500]"
+          />
+          <span className="absolute left-3.5 text-sm text-slate-500">🔍</span>
+          <button
+            type="submit"
+            className="absolute right-1.5 rounded-full bg-[#202016] px-4 py-1.5 text-xs font-bold text-white transition hover:bg-[#a48500] cursor-pointer"
+          >
+            Search
+          </button>
+        </div>
+      </form>
+    </div>
 
     <section className="bg-[#fff7d6] px-6 py-7 sm:px-10 lg:px-16">
       <div className="mx-auto grid max-w-7xl items-center gap-7 lg:grid-cols-[.8fr_1.2fr]">
