@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
+import SocialAuthModal from "../Components/SocialAuthModal";
 
 function SocialIcon({ type }) {
   if (type === "Apple") return <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current" aria-hidden="true"><path d="M16.7 12.8c0-2.2 1.8-3.3 1.9-3.4-1-.1-2.2-1.1-3.7-1.1-1.6 0-2.4.8-3.6.8-1.2 0-2.1-.8-3.5-.8-1.4 0-2.8.9-3.5 2.2-1.5 2.6-.4 6.5 1.1 8.6.7 1 1.6 2.1 2.7 2 .1 0 .2 0 .3-.1.8 0 1.7-.6 2.8-.6 1.1 0 1.9.6 2.9.6 1.2 0 1.9-1.1 2.6-2.1.8-1.1 1.1-2.2 1.1-2.3-.1 0-2.1-.8-2.1-3.8ZM14.3 6.8c.7-.8 1.2-1.9 1.1-3-.9 0-2 .6-2.7 1.4-.6.7-1.2 1.8-1.1 2.9 1 .1 2-.5 2.7-1.3Z" /></svg>;
-  if (type === "Facebook") return <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current" aria-hidden="true"><path d="M14 8h3V4h-3c-3.3 0-5 1.9-5 5v3H6v4h3v6h4v-6h3l1-4h-4V9c0-.7.3-1 1-1Z" /></svg>;
+  if (type === "Facebook") return <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 fill-current text-[#1877F2]" aria-hidden="true"><path d="M14 8h3V4h-3c-3.3 0-5 1.9-5 5v3H6v4h3v6h4v-6h3l1-4h-4V9c0-.7.3-1 1-1Z" /></svg>;
   return <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.7 4.7 0 0 1-2 3.1v2.6h3.3c1.9-1.7 2.9-4.3 2.9-7.5Z" /><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.7-2.4l-3.3-2.6c-.9.6-2 .9-3.4.9-2.6 0-4.8-1.8-5.6-4.2H3v2.7A10 10 0 0 0 12 22Z" /><path fill="#FBBC05" d="M6.4 13.7a6 6 0 0 1 0-3.4V7.6H3a10 10 0 0 0 0 8.8l3.4-2.7Z" /><path fill="#EA4335" d="M12 6.1c1.5 0 2.8.5 3.8 1.5l2.9-2.9C17 3 14.7 2 12 2a10 10 0 0 0-9 5.6l3.4 2.7C7.2 7.9 9.4 6.1 12 6.1Z" /></svg>;
 }
 
@@ -34,6 +35,7 @@ function Register() {
   const [error, setError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [socialProvider, setSocialProvider] = useState(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
@@ -73,8 +75,25 @@ function Register() {
     }
   };
 
-  return <main className="flex min-h-screen items-center justify-center bg-[#fff7d6] px-4 py-8 sm:px-6"><div className="grid w-full max-w-5xl overflow-hidden rounded-3xl bg-white p-2 shadow-[0_24px_70px_rgb(32_32_22/18%)] lg:grid-cols-[1fr_1fr]">
-    <section className="relative flex min-h-[430px] flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[#ffe88a] via-[#e7b900] to-[#fff7d6] p-7 text-[#202016] sm:p-9 lg:min-h-[560px] lg:p-10"><div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/35 blur-3xl" /><div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#a48500]/25 blur-3xl" /><div className="relative"><span className="text-3xl font-black">✦</span><p className="mt-2 max-w-xs text-[10px] font-medium leading-4 text-[#514810]">Create your account and keep everything you love in one place.</p></div><div className="relative"><p className="text-xs font-medium text-[#514810]">You can easily</p><h1 className="mt-2 max-w-xs text-3xl font-black leading-[1.02] tracking-tight sm:text-4xl">Get access to your personal<br />hub for clarity and<br />productivity</h1></div></section>
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#fff7d6] px-4 py-8 sm:px-6">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl bg-white p-2 shadow-[0_24px_70px_rgb(32_32_22/18%)] lg:grid-cols-[1fr_1fr]">
+        <section className="relative flex min-h-[430px] flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-[#ffe88a] via-[#e7b900] to-[#fff7d6] p-7 text-[#202016] sm:p-9 lg:min-h-[560px] lg:p-10">
+          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/35 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#a48500]/25 blur-3xl" />
+          <div className="relative">
+            <span className="text-3xl font-black">✦</span>
+            <p className="mt-2 max-w-xs text-[10px] font-medium leading-4 text-[#514810]">
+              Create your account and keep everything you love in one place.
+            </p>
+          </div>
+          <div className="relative">
+            <p className="text-xs font-medium text-[#514810]">You can easily</p>
+            <h1 className="mt-2 max-w-xs text-3xl font-black leading-[1.02] tracking-tight sm:text-4xl">
+              Get access to your personal<br />hub for clarity and<br />productivity
+            </h1>
+          </div>
+        </section>
 
         <section className="flex items-center p-7 sm:p-10 lg:p-12">
           <div className="w-full max-w-sm">
@@ -134,7 +153,7 @@ function Register() {
                 />
               </div>
 
-              {/* Password Input with Eye Icon and Warning */}
+              {/* Password Input with Eye Icon */}
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <label
@@ -199,21 +218,24 @@ function Register() {
             <div className="flex gap-2.5">
               <button
                 type="button"
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 cursor-pointer"
+                onClick={() => setSocialProvider("Google")}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 hover:scale-[1.02] cursor-pointer active:scale-95"
               >
                 <SocialIcon type="Google" />
                 <span>Google</span>
               </button>
               <button
                 type="button"
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 cursor-pointer"
+                onClick={() => setSocialProvider("Apple")}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 hover:scale-[1.02] cursor-pointer active:scale-95"
               >
                 <SocialIcon type="Apple" />
                 <span>Apple</span>
               </button>
               <button
                 type="button"
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 cursor-pointer"
+                onClick={() => setSocialProvider("Facebook")}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 hover:scale-[1.02] cursor-pointer active:scale-95"
               >
                 <SocialIcon type="Facebook" />
                 <span>Facebook</span>
@@ -228,7 +250,17 @@ function Register() {
             </p>
           </div>
         </section>
-  </div></main>;
+      </div>
+
+      {/* Social Authentication Modal */}
+      <SocialAuthModal
+        provider={socialProvider}
+        isOpen={Boolean(socialProvider)}
+        onClose={() => setSocialProvider(null)}
+      />
+    </main>
+  );
 }
 
 export default Register;
+

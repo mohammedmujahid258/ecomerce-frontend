@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
+import SocialAuthModal from "../Components/SocialAuthModal";
 
 function EyeIcon({ className = "w-4 h-4" }) {
   return (
@@ -66,6 +67,7 @@ function Login() {
   const [error, setError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [socialProvider, setSocialProvider] = useState(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
@@ -90,6 +92,9 @@ function Login() {
       try {
         const profileRes = await api.get("/users/profile");
         const role = profileRes.data?.user?.role || profileRes.data?.role;
+        if (role) {
+          localStorage.setItem("user_role", role);
+        }
         if (role === "admin") {
           navigate("/admin");
           return;
@@ -234,21 +239,24 @@ function Login() {
             <div className="flex gap-2.5">
               <button
                 type="button"
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 cursor-pointer"
+                onClick={() => setSocialProvider("Google")}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 hover:scale-[1.02] cursor-pointer active:scale-95"
               >
                 <GoogleIcon className="w-4 h-4 shrink-0" />
                 <span>Google</span>
               </button>
               <button
                 type="button"
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 cursor-pointer"
+                onClick={() => setSocialProvider("Apple")}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 hover:scale-[1.02] cursor-pointer active:scale-95"
               >
                 <AppleIcon className="w-4 h-4 shrink-0 text-slate-900" />
                 <span>Apple</span>
               </button>
               <button
                 type="button"
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 cursor-pointer"
+                onClick={() => setSocialProvider("Facebook")}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white py-2 px-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:border-slate-300 hover:scale-[1.02] cursor-pointer active:scale-95"
               >
                 <FacebookIcon className="w-4 h-4 shrink-0" />
                 <span>Facebook</span>
@@ -264,6 +272,13 @@ function Login() {
           </div>
         </section>
       </div>
+
+      {/* Social Authentication Modal */}
+      <SocialAuthModal
+        provider={socialProvider}
+        isOpen={Boolean(socialProvider)}
+        onClose={() => setSocialProvider(null)}
+      />
     </main>
   );
 }
