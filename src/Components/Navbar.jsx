@@ -90,7 +90,7 @@ function Navbar() {
           } absolute left-0 top-full w-full flex-col gap-4 border-b border-[#202016] bg-[#e7b900] p-5 md:static md:flex md:w-auto md:flex-row md:items-center md:border-0 md:bg-transparent md:p-0`}
         >
           {/* Mobile Search Bar */}
-          <form onSubmit={handleNavSearch} className="hidden">
+          <form onSubmit={handleNavSearch} className="hidden" style={{ display: "none" }}>
             <div className="relative w-full">
               <input
                 type="text"
