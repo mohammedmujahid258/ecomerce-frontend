@@ -146,16 +146,17 @@ function Home() {
   return <main className="store-shell bg-[#fffdf7]">
     <div className="bg-[#202016] px-6 py-2 text-center text-[11px] font-bold uppercase tracking-[.14em] text-white">Free shipping on orders over ₹999 <span className="mx-2 text-[#e7b900]">•</span> New season, new energy</div>
 
-    {/* Home Page Search Bar - prominently visible on mobile and desktop */}
-    <div className="bg-[#fff7d6] border-b border-[#e8d36b]/50 px-4 py-3 sm:px-8">
+    {/* Home Page Search Bar - Permanently visible on mobile & desktop */}
+    <div className="bg-[#fff7d6] border-b border-[#e8d36b]/60 px-4 py-3 sm:px-8">
       <form onSubmit={handleHomeSearch} className="mx-auto max-w-xl">
-        <div className="relative flex items-center">
+        <div className="relative flex items-center shadow-sm">
           <input
             type="text"
             value={homeSearch}
             onChange={(e) => setHomeSearch(e.target.value)}
-            placeholder="Search clothes, shoes, bags, electronics..."
-            className="w-full rounded-full border-2 border-[#202016] bg-white py-2.5 pl-10 pr-24 text-xs sm:text-sm text-[#202016] shadow-sm outline-none placeholder:text-gray-400 focus:border-[#a48500]"
+            placeholder="Search clothes, shoes, accessories, electronics..."
+            aria-label="Search products"
+            className="w-full rounded-full border-2 border-[#202016] bg-white py-2.5 pl-10 pr-24 text-xs sm:text-sm text-[#202016] outline-none placeholder:text-gray-400 focus:border-[#a48500]"
           />
           <span className="absolute left-3.5 text-sm text-slate-500">🔍</span>
           <button
