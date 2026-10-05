@@ -12,11 +12,15 @@ function Wishlist(){
                 const response=await api.get("/wishlist");
                 console.log("response data :",response.data);
              
-                setProducts(response.data.wishlist.products)
+                setProducts(response.data?.wishlist?.products ?? [])
             }
             catch(error){
-                console.log("error fetching wishlist : ",error)
-                setError("unable to load wishlist")
+                if (error.response?.status === 404) {
+                    setProducts([])
+                } else {
+                    console.log("error fetching wishlist : ",error)
+                    setError(error.response?.data?.message || "Unable to load wishlist")
+                }
             }
             finally{
                 setLoading(false)
@@ -30,7 +34,7 @@ const removeFromWishlist=async(productId)=>{
             data:{productId},
         })
         console.log("Remove wishlist response:",response.data);
-        setProducts(response.data.wishlist.products)
+        setProducts(response.data?.wishlist?.products ?? [])
     }
     catch(error){
         console.log("error removing from wishlist",error)
