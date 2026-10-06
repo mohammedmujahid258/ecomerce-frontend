@@ -9,11 +9,21 @@ function getStoredProfile() {
   }
 }
 
+function MicIcon() {
+  return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3" /><path strokeLinecap="round" d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" /></svg>;
+}
+
+function CameraIcon() {
+  return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M4 7h3l1.5-2h7L17 7h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" /><circle cx="12" cy="13" r="3.5" /></svg>;
+}
+
 function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [navSearch, setNavSearch] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [searchMessage, setSearchMessage] = useState("");
 
   const token = localStorage.getItem("token");
   const userRole = (localStorage.getItem("user_role") || "").toLowerCase().trim();
@@ -32,6 +42,40 @@ function Navbar() {
     } else {
       navigate("/products");
     }
+  };
+
+  const handleVoiceSearch = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSearchMessage("Voice search is not supported in this browser.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.onstart = () => { setIsListening(true); setSearchMessage("Listening..."); };
+    recognition.onresult = (event) => { setNavSearch(event.results[0][0].transcript); setSearchMessage(""); };
+    recognition.onerror = (event) => {
+      const messages = {
+        "not-allowed": "Microphone access is blocked. Allow it in browser site settings.",
+        "service-not-allowed": "Voice search is blocked by this browser.",
+        "audio-capture": "No microphone was found or it is being used by another app.",
+        "no-speech": "No speech detected. Please try again.",
+        network: "Voice search needs an internet connection.",
+      };
+      setSearchMessage(messages[event.error] || `Voice search failed: ${event.error || "unknown error"}.`);
+    };
+    recognition.onend = () => setIsListening(false);
+    try {
+      recognition.start();
+    } catch {
+      setSearchMessage("Voice search could not start. Please try again.");
+      setIsListening(false);
+    }
+  };
+
+  const handleImageSearch = (event) => {
+    if (event.target.files?.[0]) setSearchMessage("Image selected. Image search needs backend support.");
   };
 
   const handleLogout = () => {
@@ -89,16 +133,19 @@ function Navbar() {
               onChange={(e) => setNavSearch(e.target.value)}
               placeholder="Search products, categories..."
               aria-label="Search products"
-              className="w-full rounded-full border border-slate-200 bg-slate-50/80 py-2 pl-8 pr-20 text-xs text-slate-800 placeholder-slate-400 outline-none transition focus:border-[#e7b900] focus:bg-white focus:ring-2 focus:ring-[#fff0a8] md:py-1.5"
+              className="w-full rounded-full border border-slate-200 bg-slate-50/80 py-2 pl-8 pr-36 text-xs text-slate-800 placeholder-slate-400 outline-none transition focus:border-[#e7b900] focus:bg-white focus:ring-2 focus:ring-[#fff0a8] md:py-1.5"
             />
             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400" aria-hidden="true">🔍</span>
-            <button
-              type="submit"
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-[#202016] px-3.5 py-1 text-[11px] font-bold text-white transition hover:bg-[#e7b900] hover:text-[#202016] cursor-pointer"
-            >
-              Search
-            </button>
+            <div className="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1">
+              <button type="button" onClick={handleVoiceSearch} aria-label="Voice search" title="Voice search" className={`rounded-full p-1.5 transition hover:bg-[#fff0a8] ${isListening ? "text-rose-600" : "text-slate-500"}`}><MicIcon /></button>
+              <label htmlFor="image-search" aria-label="Search by image" title="Search by image" className="cursor-pointer rounded-full p-1.5 text-slate-500 transition hover:bg-[#fff0a8]">
+                <CameraIcon />
+                <input id="image-search" type="file" accept="image/*" onChange={handleImageSearch} className="hidden" />
+              </label>
+              <button type="submit" className="rounded-full bg-[#202016] px-3.5 py-1 text-[11px] font-bold text-white transition hover:bg-[#e7b900] hover:text-[#202016] cursor-pointer">Search</button>
+            </div>
           </div>
+          {searchMessage && <span className="absolute mt-16 rounded-md bg-[#202016] px-2 py-1 text-[10px] text-white shadow md:mt-12">{searchMessage}</span>}
         </form>
 
         {/* Mobile Quick Action Buttons (Wishlist, Cart, Menu) */}
