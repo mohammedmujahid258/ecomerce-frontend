@@ -123,33 +123,43 @@ function Products() {
     sortBy !== "default";
 
   return (
-    <div className="products-page min-h-screen px-4 py-8 sm:px-8 lg:px-12 bg-[#fffdf7]">
+    <main className="min-h-screen bg-[#fff7d6] px-4 py-8 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-7xl">
-        {/* Header Section */}
-        <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end border-b border-amber-200/60 pb-6">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[.25em] text-[#a48500]">
-              The Collection
-            </p>
-            <h1 className="mt-1 text-3xl sm:text-4xl font-black tracking-tight text-[#202016]">
-              Made to be Discovered
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm text-slate-500">
-              Find something special for every part of your day.
-            </p>
-          </div>
+        {/* Golden Mesh Header Banner - Matching Store Theme */}
+        <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-[#ffe88a] via-[#e7b900] to-[#fff7d6] p-6 sm:p-10 text-[#202016] shadow-[0_20px_50px_rgb(32_32_22/12%)]">
+          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/40 blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[#a48500]/25 blur-3xl" />
 
-          <span className="self-start sm:self-auto rounded-full bg-white border border-amber-200 px-4 py-1.5 text-xs font-bold text-[#202016] shadow-sm">
-            {filteredProducts.length} {filteredProducts.length === 1 ? "Product" : "Products"} Found
-          </span>
+          <div className="relative flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-black text-[#202016]">✦</span>
+                <p className="text-xs font-bold uppercase tracking-[.25em] text-[#514810]">
+                  The Everyday Edit
+                </p>
+              </div>
+              <h1 className="mt-2 text-3xl sm:text-5xl font-black tracking-tight text-[#202016]">
+                Made to be Discovered
+              </h1>
+              <p className="mt-2 max-w-lg text-xs sm:text-sm font-medium text-[#514810]">
+                Explore curated fashion, lifestyle essentials, and thoughtful products tailored for everyday life.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="rounded-2xl border border-[#202016]/20 bg-white/85 px-4 py-2 text-xs font-black text-[#202016] shadow-sm backdrop-blur-sm">
+                {filteredProducts.length} {filteredProducts.length === 1 ? "Product" : "Products"} Found
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Search & Filter Controls Bar */}
-        <div className="mb-8 rounded-2xl border border-amber-200/80 bg-white p-4 sm:p-5 shadow-[0_8px_30px_rgb(32_32_22/6%)]">
-          {/* Row 1: Search Bar & Search Button */}
-          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2.5">
+        {/* Search & Filter Controls Card */}
+        <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-[0_16px_40px_rgb(32_32_22/8%)]">
+          {/* Row 1: Search Input & Submit Button */}
+          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400">
                 🔍
               </span>
               <input
@@ -157,7 +167,8 @@ function Products() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search products by name, description, or category..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-[#e7b900] focus:bg-white focus:ring-4 focus:ring-[#fff0a8]"
+                aria-label="Search products"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 py-3 pl-11 pr-11 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-[#e7b900] focus:bg-white focus:ring-4 focus:ring-[#fff0a8]"
               />
               {searchInput && (
                 <button
@@ -167,7 +178,8 @@ function Products() {
                     setSearchQuery("");
                     setSearchParams({});
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-700 cursor-pointer"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-700 cursor-pointer"
+                  title="Clear search"
                 >
                   ✕
                 </button>
@@ -176,16 +188,18 @@ function Products() {
 
             <button
               type="submit"
-              className="rounded-xl bg-[#202016] px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow transition hover:bg-[#e7b900] hover:text-[#202016] cursor-pointer flex items-center justify-center gap-2"
+              className="rounded-2xl bg-[#202016] px-8 py-3 text-xs sm:text-sm font-black text-white shadow-md transition hover:bg-[#e7b900] hover:text-[#202016] cursor-pointer flex items-center justify-center gap-2 active:scale-95"
             >
               <span>Search</span>
               <span>→</span>
             </button>
           </form>
 
-          {/* Row 2: Category Pills */}
-          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
-            <span className="text-xs font-bold text-slate-500 mr-1">Category:</span>
+          {/* Row 2: Category Chips */}
+          <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-5">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mr-1">
+              Category:
+            </span>
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -197,7 +211,7 @@ function Products() {
                   if (cat !== "All") nextParams.category = cat;
                   setSearchParams(nextParams);
                 }}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition cursor-pointer ${
+                className={`rounded-xl px-4 py-1.5 text-xs font-bold transition cursor-pointer ${
                   selectedCategory.toLowerCase() === cat.toLowerCase()
                     ? "bg-[#202016] text-white shadow-sm"
                     : "bg-slate-100 text-slate-700 hover:bg-[#fff0a8] hover:text-[#202016]"
@@ -208,9 +222,9 @@ function Products() {
             ))}
           </div>
 
-          {/* Row 3: Dropdowns for Price Range & Sorting */}
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs">
-            <div className="flex flex-wrap items-center gap-3">
+          {/* Row 3: Filter Dropdowns & Reset */}
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5 text-xs">
+            <div className="flex flex-wrap items-center gap-4">
               {/* Price Filter */}
               <div className="flex items-center gap-2">
                 <label htmlFor="price-filter" className="font-bold text-slate-600">
@@ -220,7 +234,7 @@ function Products() {
                   id="price-filter"
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-[#e7b900]"
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-[#e7b900]"
                 >
                   <option value="all">All Prices</option>
                   <option value="under-500">Under ₹500</option>
@@ -239,7 +253,7 @@ function Products() {
                   id="sort-filter"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-[#e7b900]"
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-[#e7b900]"
                 >
                   <option value="default">Featured</option>
                   <option value="price-low">Price: Low to High</option>
@@ -255,7 +269,7 @@ function Products() {
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="font-bold text-rose-600 hover:underline cursor-pointer flex items-center gap-1"
+                className="font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer flex items-center gap-1.5"
               >
                 <span>✕</span>
                 <span>Reset Filters</span>
@@ -266,16 +280,18 @@ function Products() {
 
         {/* Error message */}
         {error && (
-          <p className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-center text-xs font-bold text-rose-600">
+          <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-center text-xs font-bold text-rose-700 shadow-sm">
+            <span className="mr-1 text-sm">⚠️</span>
             {error}
-          </p>
+          </div>
         )}
 
         {/* Loading Spinner */}
         {loading && (
           <div className="flex min-h-[300px] flex-col items-center justify-center p-12 text-center">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#202016] border-t-transparent" />
-            <p className="mt-4 text-xs font-bold uppercase tracking-wider text-[#202016]">
+            <span className="animate-pulse text-4xl font-black text-[#a48500]">✦</span>
+            <div className="mt-4 h-9 w-9 animate-spin rounded-full border-4 border-[#202016] border-t-transparent" />
+            <p className="mt-4 text-xs font-black uppercase tracking-wider text-[#202016]">
               Loading Products...
             </p>
           </div>
@@ -283,19 +299,19 @@ function Products() {
 
         {/* Empty State when no products match */}
         {!loading && filteredProducts.length === 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-            <span className="text-4xl">🔍</span>
-            <h3 className="mt-3 text-lg font-black text-slate-900">
+          <div className="rounded-3xl border border-slate-200 bg-white p-14 text-center shadow-sm">
+            <span className="text-5xl">🔍</span>
+            <h3 className="mt-4 text-xl font-black text-[#202016]">
               No matching products found
             </h3>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1.5 text-xs text-slate-500">
               Try adjusting your search query, selecting another category, or resetting your filters.
             </p>
             {hasActiveFilters && (
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="mt-4 rounded-xl bg-[#202016] px-5 py-2.5 text-xs font-bold text-white shadow transition hover:bg-[#e7b900] hover:text-[#202016] cursor-pointer"
+                className="mt-6 rounded-xl bg-[#202016] px-6 py-2.5 text-xs font-bold text-white shadow transition hover:bg-[#e7b900] hover:text-[#202016] cursor-pointer"
               >
                 Reset All Filters
               </button>
@@ -310,7 +326,7 @@ function Products() {
               <div
                 key={product._id}
                 style={{ backgroundColor: getProductCardColor(product) }}
-                className="product-card soft-card overflow-hidden rounded-2xl p-3 flex flex-col justify-between shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                className="product-card soft-card overflow-hidden rounded-2xl p-3.5 flex flex-col justify-between border border-slate-200/60 shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:border-[#e7b900]"
               >
                 <div>
                   <Link
@@ -331,17 +347,17 @@ function Products() {
                   <div className="mt-3 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5">
                       <span className="tracking-[.1em] text-[#e0ad00]">★★★★★</span>
-                      <span className="text-slate-500 font-medium">{product.rating ?? "4.8"}</span>
+                      <span className="text-slate-500 font-semibold">{product.rating ?? "4.8"}</span>
                     </div>
                     {product.category && (
-                      <span className="rounded-md bg-white/80 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                      <span className="rounded-lg bg-white/85 px-2 py-0.5 text-[10px] font-bold text-slate-700 shadow-xs">
                         {product.category}
                       </span>
                     )}
                   </div>
 
                   <Link to={`/products/${product._id}`}>
-                    <h2 className="mb-1 mt-2 text-sm sm:text-base font-bold text-slate-900 truncate hover:text-[#a48500] transition">
+                    <h2 className="mb-1 mt-2 text-sm sm:text-base font-bold text-[#202016] truncate hover:text-[#a48500] transition">
                       {product.name}
                     </h2>
                   </Link>
@@ -352,7 +368,7 @@ function Products() {
 
                 <div className="mt-auto pt-3 border-t border-black/5 flex items-center justify-between gap-2">
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-base sm:text-lg font-black text-slate-900">
+                    <span className="text-base sm:text-lg font-black text-[#202016]">
                       ₹{product.price}
                     </span>
                     <span className="text-[11px] text-slate-400 line-through">
@@ -366,7 +382,7 @@ function Products() {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }
 
