@@ -122,7 +122,7 @@ function ProductActions({ productId, showText = false }) {
   }
 
   return (
-    <div className="relative flex items-center gap-1.5 shrink-0">
+    <div className="relative z-10 flex shrink-0 items-center gap-2">
       {/* Toast Feedback */}
       {message && (
         <div className="absolute -top-8 right-0 z-30 whitespace-nowrap rounded-md bg-[#202016] px-2 py-0.5 text-[10px] font-bold text-white shadow-md">
@@ -137,7 +137,7 @@ function ProductActions({ productId, showText = false }) {
         disabled={loadingAction === "cart"}
         aria-label="Add to cart"
         title="Add to cart"
-        className="flex h-7.5 w-7.5 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-[#202016] text-white shadow-sm transition hover:bg-[#e7b900] hover:text-[#202016] active:scale-90 disabled:opacity-60 cursor-pointer"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#202016] text-white shadow-sm transition hover:bg-[#e7b900] hover:text-[#202016] active:scale-90 disabled:opacity-60 cursor-pointer"
       >
         <CartIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
       </button>
@@ -149,7 +149,7 @@ function ProductActions({ productId, showText = false }) {
         disabled={loadingAction === "wishlist"}
         aria-label="Add to wishlist"
         title="Add to wishlist"
-        className={`flex h-7.5 w-7.5 sm:h-8 sm:w-8 items-center justify-center rounded-full border transition active:scale-90 cursor-pointer ${
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition active:scale-90 cursor-pointer ${
           inWishlist
             ? "border-rose-300 bg-rose-50 text-rose-600 shadow-sm"
             : "border-slate-300 bg-white text-slate-700 hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50/50"

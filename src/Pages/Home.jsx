@@ -114,7 +114,7 @@ function ProductTile({ product }) {
       <div className="flex items-center gap-1.5 text-xs"><span className="tracking-[.1em] text-[#e0ad00]">★★★★★</span><span className="text-slate-500 font-medium">{product.rating ?? "4.8"}</span></div>
       <h3 className="mt-1.5 truncate font-bold text-[#202016] text-sm">{product.name}</h3>
       <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{product.description || "Thoughtfully selected for everyday living."}</p>
-      <div className="mt-3 flex items-center justify-between gap-2">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-baseline gap-1.5">
           <span className="font-black text-[#202016] text-base">₹{product.price}</span>
           <span className="text-[11px] text-slate-400 line-through">₹{Math.round(product.price * 1.25)}</span>
