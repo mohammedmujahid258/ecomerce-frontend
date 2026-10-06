@@ -8,6 +8,7 @@ function Orders() {
   const [productMap, setProductMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [expandedOrder, setExpandedOrder] = useState(null);
 
   useEffect(() => {
     const fetchOrdersAndProducts = async () => {
@@ -61,6 +62,19 @@ function Orders() {
       return "bg-rose-100 text-rose-800 border-rose-200";
     }
     return "bg-amber-100 text-amber-800 border-amber-200";
+  };
+
+  const formatAddress = (address) => {
+    if (!address) return "Not provided";
+    if (typeof address === "string") return address;
+    return [
+      address.fullname || address.fullName || address.name,
+      address.phone,
+      address.street || address.address,
+      address.city,
+      address.state,
+      address.pincode || address.postalCode,
+    ].filter(Boolean).join(", ") || "Not provided";
   };
 
   return (
@@ -161,6 +175,13 @@ function Orders() {
                   >
                     {status}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedOrder((current) => current === order._id ? null : order._id)}
+                    className="rounded-lg border border-[#202016] bg-[#e7b900] px-3 py-1.5 text-xs font-bold text-[#202016] shadow-sm transition hover:bg-[#202016] hover:text-white"
+                  >
+                    {expandedOrder === order._id ? "Hide details" : "View details"}
+                  </button>
                 </div>
 
                 {/* Order Items with Images */}
@@ -187,7 +208,7 @@ function Orders() {
                       >
                         {/* Image + Product Details */}
                         <div className="flex items-center gap-3.5">
-                          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-1">
+                          <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white p-2 sm:h-28 sm:w-28">
                             {imageUrl ? (
                               <img
                                 src={imageUrl}
@@ -221,6 +242,29 @@ function Orders() {
                     );
                   })}
                 </div>
+
+                {expandedOrder === order._id && (
+                  <div className="mt-4 grid gap-3 rounded-xl border border-[#ffe88a] bg-[#fffdf0] p-4 text-sm sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Order date</p>
+                      <p className="mt-1 font-semibold text-[#202016]">
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "Not available"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Payment</p>
+                      <p className="mt-1 font-semibold text-[#202016]">
+                        {order.paymentMethod || order.payment?.method || "Not available"}
+                      </p>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Delivery address</p>
+                      <p className="mt-1 font-semibold text-[#202016]">
+                        {formatAddress(order.shippingAddress || order.deliveryAddress || order.address)}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Order Total */}
                 <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">

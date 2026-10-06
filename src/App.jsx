@@ -12,6 +12,7 @@ import Wishlist from "./Pages/Wishlist.jsx";
 import Cart from "./Pages/Cart.jsx";
 import Checkout from "./Pages/Checkout.jsx";
 import Orders from "./Pages/Orders.jsx";
+import Profile from "./Pages/Profile.jsx";
 
 import Login from "./Pages/Login.jsx";
 import Register from "./Pages/Register.jsx";
@@ -32,10 +33,11 @@ function App() {
 function AppContent() {
   const location = useLocation();
   const isAuthPage = ["/login", "/register"].includes(location.pathname);
+  const isFocusedPage = ["/wishlist", "/cart", "/checkout", "/orders", "/profile"].includes(location.pathname);
 
   return (
     <>
-      {!isAuthPage && <Navbar />}
+      {!isAuthPage && !isFocusedPage && <Navbar />}
 
       <Routes>
         {/* Public routes */}
@@ -74,7 +76,7 @@ function AppContent() {
           }
         />
         <Route
-  path="/orders"
+          path="/orders"
   element={
     <ProtectedRoute>
       <Orders />
@@ -88,6 +90,15 @@ function AppContent() {
             <AdminRoute>
               <AdminDashboard />
             </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
           }
         />
 
@@ -129,7 +140,7 @@ function AppContent() {
 
       </Routes>
 
-      {!isAuthPage && <Footer />}
+      {!isAuthPage && !isFocusedPage && <Footer />}
     </>
   );
 }

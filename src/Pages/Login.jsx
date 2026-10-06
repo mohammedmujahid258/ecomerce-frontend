@@ -92,6 +92,20 @@ function Login() {
       try {
         const profileRes = await api.get("/users/profile");
         const role = profileRes.data?.user?.role || profileRes.data?.role;
+        const currentUser = profileRes.data?.user || profileRes.data?.data?.user || profileRes.data?.data;
+        if (currentUser) {
+          let savedProfile = {};
+          try {
+            savedProfile = JSON.parse(localStorage.getItem("profile") || "{}");
+          } catch {
+            savedProfile = {};
+          }
+          localStorage.setItem("profile", JSON.stringify({
+            ...savedProfile,
+            name: currentUser.name || currentUser.fullName || savedProfile.name || "",
+            email: currentUser.email || savedProfile.email || email,
+          }));
+        }
         if (role) {
           localStorage.setItem("user_role", role);
         }

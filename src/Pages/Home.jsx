@@ -136,18 +136,14 @@ function Home() {
 
   const handleHomeSearch = (e) => {
     e.preventDefault();
-    if (homeSearch.trim()) {
-      navigate(`/products?search=${encodeURIComponent(homeSearch.trim())}`);
-    } else {
-      navigate("/products");
-    }
+    navigate(homeSearch.trim() ? `/products?search=${encodeURIComponent(homeSearch.trim())}` : "/products");
   };
 
   return <main className="store-shell bg-[#fffdf7]">
     <div className="bg-[#202016] px-6 py-2 text-center text-[11px] font-bold uppercase tracking-[.14em] text-white">Free shipping on orders over ₹999 <span className="mx-2 text-[#e7b900]">•</span> New season, new energy</div>
 
     {/* Home Page Search Bar - Permanently visible on mobile & desktop */}
-    <div className="bg-[#fff7d6] border-b border-[#e8d36b]/60 px-4 py-3 sm:px-8">
+    <div style={{ display: "none" }}>
       <form onSubmit={handleHomeSearch} className="mx-auto max-w-xl">
         <div className="relative flex items-center shadow-sm">
           <input
@@ -175,7 +171,10 @@ function Home() {
           <p className="text-xs font-black uppercase tracking-[.22em] text-[#a48500]">The everyday edit</p>
           <h1 className="mt-4 max-w-lg text-4xl font-black uppercase leading-[.92] tracking-[-.05em] text-[#202016] sm:text-6xl">Elevate your<br /><span className="text-[#a48500]">everyday.</span></h1>
           <p className="mt-5 max-w-md text-sm leading-6 text-[#514810] sm:text-base">Curated fashion, accessories and lifestyle essentials that bring a little more intention to every day.</p>
-          <Link to="/products" className="mt-7 inline-flex rounded-full bg-[#202016] px-6 py-3 text-xs font-black uppercase tracking-wide text-white transition hover:bg-[#e7b900] hover:text-[#202016]">Shop the collection</Link>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link to="/products" className="inline-flex rounded-full bg-[#202016] px-6 py-3 text-xs font-black uppercase tracking-wide text-white transition hover:bg-[#e7b900] hover:text-[#202016]">Shop the collection</Link>
+            <Link to="/profile" className="inline-flex rounded-full border-2 border-[#202016] px-6 py-3 text-xs font-black uppercase tracking-wide text-[#202016] transition hover:bg-[#202016] hover:text-white">My Profile</Link>
+          </div>
 
           <div className="mt-8 flex flex-wrap items-center gap-4 text-xs font-bold text-[#514810]">
             <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-[#a48500]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg> Premium Quality</span>

@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+function getStoredProfile() {
+  try {
+    return JSON.parse(localStorage.getItem("profile") || "{}");
+  } catch {
+    return {};
+  }
+}
+
 function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -10,6 +18,11 @@ function Navbar() {
   const token = localStorage.getItem("token");
   const userRole = (localStorage.getItem("user_role") || "").toLowerCase().trim();
   const isAdmin = userRole === "admin";
+  const profile = getStoredProfile();
+  const profileInitials = profile.name
+    ? profile.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase()
+    : "U";
+  const showLegacyMobileSearch = false;
 
   const handleNavSearch = (e) => {
     e.preventDefault();
@@ -42,17 +55,33 @@ function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur-md sm:px-8">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-2.5 shrink-0" onClick={() => setMenuOpen(false)}>
+        <div className="flex items-center gap-2.5 shrink-0">
+          {token && (
+            <Link
+              to="/profile"
+              className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-[#e7b900] bg-[#fff7d6] text-[11px] font-black text-[#a48500] shadow-sm transition hover:scale-105"
+              title="My Profile"
+              aria-label="My Profile"
+            >
+              {profile.image ? (
+                <img src={profile.image} alt="My profile" className="h-full w-full object-cover" />
+              ) : (
+                profileInitials
+              )}
+            </Link>
+          )}
+          <Link to="/" className="flex items-center gap-2.5" onClick={() => setMenuOpen(false)}>
           <span className="brand-mark">M</span>
           <span className="text-lg font-extrabold tracking-tight text-slate-900">
             My<span className="text-[#a48500]">Store</span>
           </span>
-        </Link>
+          </Link>
+        </div>
 
         {/* Desktop Quick Search Bar */}
-        <form onSubmit={handleNavSearch} className="hidden md:flex items-center mx-4 flex-1 max-w-md">
+        <form onSubmit={handleNavSearch} className="order-3 flex w-full items-center md:order-none md:mx-4 md:max-w-md md:flex-1">
           <div className="relative w-full">
             <input
               type="text"
@@ -60,7 +89,7 @@ function Navbar() {
               onChange={(e) => setNavSearch(e.target.value)}
               placeholder="Search products, categories..."
               aria-label="Search products"
-              className="w-full rounded-full border border-slate-200 bg-slate-50/80 py-1.5 pl-8 pr-20 text-xs text-slate-800 placeholder-slate-400 outline-none transition focus:border-[#e7b900] focus:bg-white focus:ring-2 focus:ring-[#fff0a8]"
+              className="w-full rounded-full border border-slate-200 bg-slate-50/80 py-2 pl-8 pr-20 text-xs text-slate-800 placeholder-slate-400 outline-none transition focus:border-[#e7b900] focus:bg-white focus:ring-2 focus:ring-[#fff0a8] md:py-1.5"
             />
             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400" aria-hidden="true">🔍</span>
             <button
@@ -74,6 +103,13 @@ function Navbar() {
 
         {/* Mobile Quick Action Buttons (Wishlist, Cart, Menu) */}
         <div className="flex items-center gap-2 md:hidden">
+          <Link
+            to="/products"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-sm hover:bg-[#fff7d6]"
+            title="Products"
+          >
+            🛍️
+          </Link>
           <Link
             to="/wishlist"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-sm hover:bg-[#fff7d6]"
@@ -140,7 +176,8 @@ function Navbar() {
       </div>
 
       {/* Mobile Search Bar - PERMANENTLY VISIBLE on mobile screens */}
-      <div className="mt-2.5 block md:hidden">
+      {showLegacyMobileSearch && (
+      <div className="hidden">
         <form onSubmit={handleNavSearch} className="flex w-full items-center">
           <div className="relative w-full">
             <input
@@ -161,6 +198,7 @@ function Navbar() {
           </div>
         </form>
       </div>
+      )}
 
       {/* Mobile Menu Dropdown */}
       {menuOpen && (

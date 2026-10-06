@@ -60,6 +60,12 @@ function Register() {
         email: email.trim(),
         password,
       });
+      localStorage.setItem("profile", JSON.stringify({
+        name: name.trim(),
+        email: email.trim(),
+        phone: "",
+        image: "",
+      }));
       navigate("/login");
     } catch (requestError) {
       const msg =
@@ -263,4 +269,3 @@ function Register() {
 }
 
 export default Register;
-
