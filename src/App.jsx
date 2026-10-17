@@ -37,7 +37,7 @@ function AppContent() {
   const isAdminPage = location.pathname.startsWith("/admin");
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-[#faf8f5] text-stone-900 selection:bg-stone-900 selection:text-white">
       {/* Show Navbar on all storefront pages */}
       {!isAuthPage && !isAdminPage && <Navbar />}
 
