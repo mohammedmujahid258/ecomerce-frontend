@@ -35,9 +35,11 @@ html, body, #root {
   color: #18181b;
 }
 
-a {
-  text-decoration: none;
-  color: inherit;
+@layer base {
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 }
 
 /* Store container base styles */

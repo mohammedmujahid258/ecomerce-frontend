@@ -114,9 +114,12 @@ export default function Home() {
               <div className="mt-8 flex flex-wrap items-center gap-3.5 sm:gap-4">
                 <Link
                   to="/products"
-                  className="inline-flex items-center justify-center rounded-full bg-stone-900 px-8 py-3.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-stone-800 active:scale-95 cursor-pointer"
+                  className="inline-flex items-center justify-center rounded-full bg-stone-900 px-8 py-3.5 text-xs sm:text-sm font-semibold text-white hover:text-white focus:text-white active:text-white text-center shadow-sm transition hover:bg-stone-800 active:scale-95 cursor-pointer"
+                  style={{ color: "#ffffff" }}
                 >
-                  Shop Collection
+                  <span className="relative z-1 font-semibold text-white" style={{ color: "#ffffff" }}>
+                    Shop Collection
+                  </span>
                 </Link>
                 <Link
                   to="/products?category=electronics"
