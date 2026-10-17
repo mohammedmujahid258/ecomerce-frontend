@@ -4,7 +4,7 @@ import { api } from "../api";
 import ProductCard from "../Components/ProductCard";
 import CategoryCard from "../Components/CategoryCard";
 import { ProductGridSkeleton } from "../Components/LoadingSkeleton";
-import heroImage from "../assets/ecommerce-hero.jpg";
+import heroImage from "../assets/ecommerce-hero.png";
 
 // Categories strictly supported by the real database data
 const categoryDefinitions = [
