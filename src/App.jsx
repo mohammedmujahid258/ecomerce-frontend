@@ -13,6 +13,7 @@ import Wishlist from "./Pages/Wishlist.jsx";
 import Cart from "./Pages/Cart.jsx";
 import Checkout from "./Pages/Checkout.jsx";
 import Orders from "./Pages/Orders.jsx";
+import OrderDetails from "./Pages/OrderDetails.jsx";
 import Profile from "./Pages/Profile.jsx";
 
 import Login from "./Pages/Login.jsx";
@@ -84,6 +85,15 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <Orders />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/orders/:id"
+            element={
+              <ProtectedRoute>
+                <OrderDetails />
               </ProtectedRoute>
             }
           />

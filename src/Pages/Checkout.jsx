@@ -591,10 +591,10 @@ export default function Checkout() {
             {/* Action Buttons */}
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
-                to="/orders"
+                to={`/orders/${confirmedOrder._id}`}
                 className="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-stone-900 px-8 py-3.5 text-xs font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-95"
               >
-                View Order History & Tracking &rarr;
+                View Order Receipt & Tracking &rarr;
               </Link>
               <Link
                 to="/products"
