@@ -12,7 +12,11 @@ const ThemeContext = createContext({
 export function ThemeProvider({ children }) {
   const [themeKey, setThemeKey] = useState(() => {
     try {
-      return localStorage.getItem("app_theme") || DEFAULT_THEME_ID;
+      const stored = localStorage.getItem("app_theme");
+      if (!stored || stored === "yellow") {
+        return DEFAULT_THEME_ID;
+      }
+      return stored;
     } catch {
       return DEFAULT_THEME_ID;
     }

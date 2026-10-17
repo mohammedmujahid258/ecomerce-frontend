@@ -157,7 +157,7 @@ export const themes = {
   },
 };
 
-export const DEFAULT_THEME_ID = "yellow";
+export const DEFAULT_THEME_ID = "zinc";
 
 export function getTheme(themeId) {
   return themes[themeId] || themes[DEFAULT_THEME_ID];
