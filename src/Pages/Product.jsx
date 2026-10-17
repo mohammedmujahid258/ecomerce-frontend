@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api";
-import ProductCard from "../Components/ProductCard";
-import { ProductGridSkeleton } from "../Components/LoadingSkeleton";
-import EmptyState from "../Components/EmptyState";
-import ErrorState from "../Components/ErrorState";
+import ProductGrid from "../Components/ProductGrid";
 
 const ITEMS_PER_PAGE = 8;
+
+// Friendly category label mapping for known catalog departments
+const categoryLabels = {
+  all: "All",
+  mobile: "Smartphones & Mobile",
+  electronics: "Electronics & Tech",
+  "electronic device": "Audio & Devices",
+  fabric: "Apparel & Fabric",
+  shoes: "Footwear & Shoes",
+  glass: "Eyewear & Accessories",
+};
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -15,7 +23,7 @@ export default function Products() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
-  const selectedCategory = searchParams.get("category") || "All";
+  const selectedCategory = searchParams.get("category") || "all";
 
   // Filter & Search States
   const [searchInput, setSearchInput] = useState(searchQuery);
@@ -30,15 +38,17 @@ export default function Products() {
   const [sortBy, setSortBy] = useState("default");
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
-  const fetchCatalog = () => {
+  const loadProducts = () => {
+    setLoading(true);
+    setError("");
     api
       .get("/products")
       .then(({ data }) => {
         setProducts(data.products ?? []);
       })
       .catch((err) => {
-        console.error("Failed to load products:", err);
-        setError("Unable to load product catalog. Please ensure the server is running.");
+        console.error("Failed to load products catalog:", err);
+        setError("Unable to load product catalog. Please ensure your connection is active and try again.");
       })
       .finally(() => {
         setLoading(false);
@@ -46,7 +56,26 @@ export default function Products() {
   };
 
   useEffect(() => {
-    fetchCatalog();
+    let isMounted = true;
+    api
+      .get("/products")
+      .then(({ data }) => {
+        if (!isMounted) return;
+        setProducts(data.products ?? []);
+      })
+      .catch((err) => {
+        console.error("Failed to load products catalog:", err);
+        if (isMounted) {
+          setError("Unable to load product catalog. Please ensure your connection is active and try again.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Compute available categories dynamically from existing products
@@ -54,10 +83,10 @@ export default function Products() {
     const catSet = new Set();
     products.forEach((p) => {
       if (p.category && p.category.trim()) {
-        catSet.add(p.category.trim());
+        catSet.add(p.category.trim().toLowerCase());
       }
     });
-    return ["All", ...Array.from(catSet)];
+    return ["all", ...Array.from(catSet)];
   }, [products]);
 
   // Handle Search Submission
@@ -68,7 +97,7 @@ export default function Products() {
 
     const nextParams = {};
     if (trimmed) nextParams.search = trimmed;
-    if (selectedCategory !== "All") nextParams.category = selectedCategory;
+    if (selectedCategory !== "all") nextParams.category = selectedCategory;
     setSearchParams(nextParams);
   };
 
@@ -95,10 +124,13 @@ export default function Products() {
           if (!nameMatch && !descMatch && !catMatch) return false;
         }
 
-        // 2. Category Filter
-        if (selectedCategory !== "All") {
+        // 2. Category Filter (case-insensitive substring match)
+        if (selectedCategory !== "all" && selectedCategory !== "All") {
           const prodCat = (product.category || "").toLowerCase().trim();
-          if (prodCat !== selectedCategory.toLowerCase().trim()) return false;
+          const filterCat = selectedCategory.toLowerCase().trim();
+          if (!prodCat.includes(filterCat) && !filterCat.includes(prodCat)) {
+            return false;
+          }
         }
 
         // 3. In-Stock Filter
@@ -131,7 +163,7 @@ export default function Products() {
 
   const hasActiveFilters =
     Boolean(searchQuery.trim()) ||
-    selectedCategory !== "All" ||
+    (selectedCategory !== "all" && selectedCategory !== "All") ||
     priceRange !== "all" ||
     inStockOnly ||
     sortBy !== "default";
@@ -139,40 +171,59 @@ export default function Products() {
   const paginatedProducts = filteredProducts.slice(0, visibleCount);
   const hasMore = visibleCount < filteredProducts.length;
 
+  const currentCategoryLabel =
+    categoryLabels[selectedCategory.toLowerCase()] ||
+    (selectedCategory !== "all" ? selectedCategory : "All Products");
+
   return (
-    <main className="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[#faf8f5] py-10 sm:py-14 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {/* Header Title & Breadcrumb */}
-        <div className="mb-6">
-          <nav className="flex items-center gap-1.5 text-xs text-slate-500 mb-2">
-            <span>Home</span>
-            <span>/</span>
-            <span className="font-semibold text-slate-900">Products</span>
-            {selectedCategory !== "All" && (
-              <>
-                <span>/</span>
-                <span className="capitalize font-semibold text-blue-600">{selectedCategory}</span>
-              </>
-            )}
-          </nav>
-          <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-                {selectedCategory !== "All" ? `${selectedCategory} Collection` : "All Products"}
-              </h1>
-              <p className="mt-1 text-xs text-slate-500">
-                Showing {filteredProducts.length} verified {filteredProducts.length === 1 ? "item" : "items"}
-              </p>
-            </div>
+        {/* Breadcrumb Navigation */}
+        <nav className="flex items-center gap-2 text-xs text-stone-500 mb-4" aria-label="Breadcrumb">
+          <Link to="/" className="hover:text-stone-900 transition">
+            Home
+          </Link>
+          <span>/</span>
+          <Link to="/products" className="hover:text-stone-900 transition">
+            Shop
+          </Link>
+          {selectedCategory !== "all" && (
+            <>
+              <span>/</span>
+              <span className="font-semibold text-stone-900 capitalize">
+                {currentCategoryLabel}
+              </span>
+            </>
+          )}
+        </nav>
+
+        {/* Editorial Page Header */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-widest text-stone-400">
+              Curated Catalog
+            </span>
+            <h1 className="mt-1 font-editorial text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-stone-900">
+              {selectedCategory !== "all" ? currentCategoryLabel : "All Products"}
+            </h1>
+            <p className="mt-2 text-xs sm:text-sm text-stone-500 max-w-xl">
+              Thoughtfully selected essentials for modern living, verified for authenticity and crafted for daily durability.
+            </p>
+          </div>
+
+          <div className="shrink-0 text-right">
+            <span className="inline-block rounded-full border border-stone-200 bg-white px-3.5 py-1 text-xs font-semibold text-stone-700 shadow-2xs">
+              {filteredProducts.length} {filteredProducts.length === 1 ? "Item" : "Items"} Available
+            </span>
           </div>
         </div>
 
         {/* Search & Filter Bar */}
-        <div className="mb-8 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs">
-          {/* Row 1: Search form */}
+        <div className="mb-10 rounded-2xl border border-stone-200/90 bg-white p-4 sm:p-6 shadow-xs">
+          {/* Row 1: Search Form */}
           <form onSubmit={handleSearchSubmit} className="flex gap-2.5">
             <div className="relative flex-1">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-stone-400 pointer-events-none">
                 🔍
               </span>
               <input
@@ -180,17 +231,19 @@ export default function Products() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search products by title, category, or description..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2.5 pl-9 pr-10 text-xs sm:text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-100"
+                aria-label="Search catalog"
+                className="w-full rounded-xl border border-stone-200 bg-stone-50/70 py-2.5 pl-10 pr-10 text-xs sm:text-sm text-stone-800 placeholder-stone-400 outline-none transition focus:border-stone-400 focus:bg-white focus:ring-2 focus:ring-stone-100"
               />
               {searchInput && (
                 <button
                   type="button"
                   onClick={() => {
                     setSearchInput("");
-                    setSearchParams(selectedCategory !== "All" ? { category: selectedCategory } : {});
+                    setSearchParams(selectedCategory !== "all" ? { category: selectedCategory } : {});
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 cursor-pointer p-1"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-stone-400 hover:text-stone-700 cursor-pointer p-1"
                   title="Clear search"
+                  aria-label="Clear search"
                 >
                   ✕
                 </button>
@@ -199,19 +252,20 @@ export default function Products() {
 
             <button
               type="submit"
-              className="rounded-xl bg-slate-900 px-5 sm:px-6 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800 cursor-pointer active:scale-95"
+              className="rounded-xl bg-stone-900 px-6 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-95 cursor-pointer"
             >
               Search
             </button>
           </form>
 
           {/* Row 2: Category Chips */}
-          <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-4">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
-              Category:
+          <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-stone-100 pt-4">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mr-1">
+              Departments:
             </span>
             {availableCategories.map((cat) => {
               const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase();
+              const label = categoryLabels[cat] || cat;
               return (
                 <button
                   key={cat}
@@ -220,27 +274,27 @@ export default function Products() {
                     setVisibleCount(ITEMS_PER_PAGE);
                     const nextParams = {};
                     if (searchQuery.trim()) nextParams.search = searchQuery.trim();
-                    if (cat !== "All") nextParams.category = cat;
+                    if (cat !== "all") nextParams.category = cat;
                     setSearchParams(nextParams);
                   }}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition cursor-pointer ${
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
                     isSelected
-                      ? "bg-slate-900 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                      ? "bg-stone-900 text-white shadow-xs"
+                      : "bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-900"
                   }`}
                 >
-                  {cat}
+                  {label}
                 </button>
               );
             })}
           </div>
 
-          {/* Row 3: Dropdowns, Stock Toggle & Reset */}
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 text-xs">
+          {/* Row 3: Dropdowns, Stock Toggle & Reset Filters */}
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 pt-4 text-xs">
             <div className="flex flex-wrap items-center gap-4">
               {/* Price Filter */}
               <div className="flex items-center gap-2">
-                <label htmlFor="price-filter" className="font-semibold text-slate-600">
+                <label htmlFor="price-filter" className="font-semibold text-stone-600">
                   Price:
                 </label>
                 <select
@@ -250,7 +304,7 @@ export default function Products() {
                     setPriceRange(e.target.value);
                     setVisibleCount(ITEMS_PER_PAGE);
                   }}
-                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-800 outline-none focus:border-slate-400 cursor-pointer"
+                  className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-stone-800 outline-none focus:border-stone-400 cursor-pointer"
                 >
                   <option value="all">All Prices</option>
                   <option value="under-1000">Under ₹1,000</option>
@@ -262,8 +316,8 @@ export default function Products() {
 
               {/* Sort Filter */}
               <div className="flex items-center gap-2">
-                <label htmlFor="sort-filter" className="font-semibold text-slate-600">
-                  Sort by:
+                <label htmlFor="sort-filter" className="font-semibold text-stone-600">
+                  Sort:
                 </label>
                 <select
                   id="sort-filter"
@@ -272,7 +326,7 @@ export default function Products() {
                     setSortBy(e.target.value);
                     setVisibleCount(ITEMS_PER_PAGE);
                   }}
-                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-800 outline-none focus:border-slate-400 cursor-pointer"
+                  className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-stone-800 outline-none focus:border-stone-400 cursor-pointer"
                 >
                   <option value="default">Featured</option>
                   <option value="price-low">Price: Low to High</option>
@@ -284,7 +338,7 @@ export default function Products() {
               </div>
 
               {/* In-Stock Toggle */}
-              <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+              <label className="flex items-center gap-2 cursor-pointer font-medium text-stone-700 select-none">
                 <input
                   type="checkbox"
                   checked={inStockOnly}
@@ -292,7 +346,7 @@ export default function Products() {
                     setInStockOnly(e.target.checked);
                     setVisibleCount(ITEMS_PER_PAGE);
                   }}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                  className="rounded border-stone-300 text-stone-900 focus:ring-stone-500 h-4 w-4"
                 />
                 <span>In Stock Only</span>
               </label>
@@ -303,7 +357,7 @@ export default function Products() {
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer flex items-center gap-1"
+                className="font-semibold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer flex items-center gap-1.5"
               >
                 <span>✕</span>
                 <span>Reset Filters</span>
@@ -312,51 +366,32 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Error State */}
-        {error && (
-          <div className="mb-6">
-            <ErrorState message={error} onRetry={fetchCatalog} />
+        {/* Main Product Grid with Loading, Empty & Error States */}
+        <ProductGrid
+          products={paginatedProducts}
+          loading={loading}
+          error={error}
+          onRetry={loadProducts}
+          emptyTitle="No matching products found"
+          emptyDescription="We couldn't find any items matching your active search or filters. Try adjusting your query or resetting your criteria."
+          emptyActionLabel="Reset All Filters"
+          onEmptyAction={handleResetFilters}
+        />
+
+        {/* Load More Pagination */}
+        {!loading && !error && hasMore && (
+          <div className="mt-12 flex flex-col items-center justify-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+              className="rounded-full border border-stone-300 bg-white px-8 py-3 text-xs sm:text-sm font-semibold text-stone-900 shadow-xs transition hover:bg-stone-50 hover:border-stone-400 active:scale-95 cursor-pointer"
+            >
+              Load More Products ({filteredProducts.length - visibleCount} remaining)
+            </button>
+            <p className="text-[11px] text-stone-400">
+              Showing {visibleCount} of {filteredProducts.length} items
+            </p>
           </div>
-        )}
-
-        {/* Loading State */}
-        {loading && <ProductGridSkeleton count={8} />}
-
-        {/* Empty State */}
-        {!loading && !error && filteredProducts.length === 0 && (
-          <EmptyState
-            title="No matching products found"
-            description="We couldn't find any items matching your active search or filters. Try adjusting your search term or resetting your filter criteria."
-            actionLabel="Reset All Filters"
-            onAction={handleResetFilters}
-          />
-        )}
-
-        {/* Products Grid */}
-        {!loading && !error && filteredProducts.length > 0 && (
-          <>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {paginatedProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
-
-            {/* Load More Pagination */}
-            {hasMore && (
-              <div className="mt-10 flex flex-col items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
-                  className="rounded-xl border border-slate-300 bg-white px-8 py-3 text-xs sm:text-sm font-bold text-slate-900 shadow-xs transition hover:bg-slate-50 hover:border-slate-400 active:scale-95 cursor-pointer"
-                >
-                  Load More Products ({filteredProducts.length - visibleCount} remaining)
-                </button>
-                <p className="text-[11px] text-slate-400">
-                  Showing {visibleCount} of {filteredProducts.length} items
-                </p>
-              </div>
-            )}
-          </>
         )}
       </div>
     </main>

@@ -201,7 +201,7 @@ export default function Home() {
           {loading ? (
             <ProductGridSkeleton count={4} />
           ) : selectedProducts.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 max-[400px]:grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-3 lg:grid-cols-4">
               {selectedProducts.map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}
