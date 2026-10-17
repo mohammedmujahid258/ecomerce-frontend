@@ -105,10 +105,10 @@ function ProductActions({ productId, inStock = true, showText = false, onActionC
           type="button"
           onClick={(e) => handleAction(e, "cart")}
           disabled={loadingAction === "cart" || !inStock}
-          className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 active:scale-98 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 cursor-pointer"
+          className="flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-stone-900 px-4 sm:px-6 text-sm font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-98 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-600 cursor-pointer"
         >
-          <CartIcon className="w-4 h-4" />
-          <span>
+          <CartIcon className="w-4 h-4 shrink-0 relative z-1" />
+          <span className="relative z-1 whitespace-nowrap">
             {loadingAction === "cart"
               ? "Adding..."
               : inStock
@@ -122,13 +122,13 @@ function ProductActions({ productId, inStock = true, showText = false, onActionC
           disabled={loadingAction === "wishlist"}
           aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
           title={inWishlist ? "In Wishlist" : "Add to Wishlist"}
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition active:scale-95 cursor-pointer ${
+          className={`flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl border transition active:scale-95 cursor-pointer ${
             inWishlist
-              ? "border-rose-300 bg-rose-50 text-rose-600 shadow-sm"
-              : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+              ? "border-rose-300 bg-rose-50 text-rose-600 shadow-xs"
+              : "border-stone-200 bg-white text-stone-700 hover:border-stone-300 hover:bg-stone-50"
           }`}
         >
-          <HeartIcon className="w-5 h-5" filled={inWishlist} />
+          <HeartIcon className="w-5 h-5 relative z-1" filled={inWishlist} />
         </button>
       </div>
     );
@@ -143,9 +143,9 @@ function ProductActions({ productId, inStock = true, showText = false, onActionC
         disabled={loadingAction === "cart" || !inStock}
         aria-label={inStock ? "Add to cart" : "Out of stock"}
         title={inStock ? "Add to cart" : "Out of stock"}
-        className="flex h-9 w-9 items-center justify-center rounded-xl bg-stone-900 text-white shadow-xs transition hover:bg-stone-800 active:scale-95 disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed cursor-pointer"
+        className="flex h-9 w-9 items-center justify-center rounded-xl bg-stone-900 text-white shadow-xs transition hover:bg-stone-800 active:scale-95 disabled:bg-stone-200 disabled:text-stone-600 disabled:cursor-not-allowed cursor-pointer"
       >
-        <CartIcon className="w-4 h-4" />
+        <CartIcon className="w-4 h-4 relative z-1" />
       </button>
 
       {/* Wishlist icon button */}
@@ -161,7 +161,7 @@ function ProductActions({ productId, inStock = true, showText = false, onActionC
             : "border-stone-300 bg-white text-stone-700 hover:border-stone-400 hover:bg-stone-50 hover:text-stone-900"
         }`}
       >
-        <HeartIcon className="w-4 h-4" filled={inWishlist} />
+        <HeartIcon className="w-4 h-4 relative z-1" filled={inWishlist} />
       </button>
     </div>
   );

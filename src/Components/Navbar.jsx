@@ -389,7 +389,9 @@ export default function Navbar() {
                   onFocus={() => setSearchFocused(true)}
                   placeholder="Search products..."
                   aria-label="Search store products"
-                  className={`rounded-full border border-stone-200 bg-stone-50/80 py-1.5 pl-8 pr-16 text-xs text-stone-800 placeholder-stone-400 outline-none transition-all duration-300 focus:border-stone-400 focus:bg-white focus:ring-2 focus:ring-stone-100 ${
+                  className={`rounded-full border border-stone-200 bg-stone-50/80 py-1.5 pl-8 text-xs text-stone-800 placeholder-stone-400 outline-none transition-all duration-300 focus:border-stone-400 focus:bg-white focus:ring-2 focus:ring-stone-100 ${
+                    navSearch ? "pr-24" : "pr-16"
+                  } ${
                     searchFocused ? "w-60 lg:w-72 shadow-sm" : "w-36 lg:w-48"
                   }`}
                 />
@@ -402,7 +404,7 @@ export default function Navbar() {
                   </svg>
                 </span>
 
-                {/* Clear Button */}
+                {/* Clear Button - positioned cleanly to the left of the Search submit button */}
                 {navSearch && (
                   <button
                     type="button"
@@ -410,7 +412,7 @@ export default function Navbar() {
                       setNavSearch("");
                       searchInputRef.current?.focus();
                     }}
-                    className="absolute right-12 top-1/2 -translate-y-1/2 text-xs text-stone-400 hover:text-stone-700 p-0.5 cursor-pointer"
+                    className="absolute right-16 top-1/2 -translate-y-1/2 z-10 flex h-4 w-4 items-center justify-center rounded-full text-xs text-stone-400 hover:text-stone-700 hover:bg-stone-200/60 transition p-0.5 cursor-pointer"
                     title="Clear search input"
                     aria-label="Clear search input"
                   >
@@ -421,7 +423,7 @@ export default function Navbar() {
                 {/* Search Button with 100% visible text */}
                 <button
                   type="submit"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-stone-900 px-2.5 py-1 text-[10px] font-semibold text-white transition hover:bg-stone-800 active:scale-95 cursor-pointer"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 z-10 rounded-full bg-stone-900 px-2.5 py-1 text-[10px] font-semibold text-white transition hover:bg-stone-800 active:scale-95 cursor-pointer"
                 >
                   Search
                 </button>

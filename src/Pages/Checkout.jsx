@@ -851,9 +851,9 @@ export default function Checkout() {
                     <button
                       type="submit"
                       disabled={addressSaving}
-                      className="rounded-full bg-stone-900 px-6 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-stone-800 disabled:opacity-50 cursor-pointer"
+                      className="rounded-full bg-stone-900 px-6 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-600 disabled:cursor-not-allowed cursor-pointer min-h-[40px]"
                     >
-                      {addressSaving ? "Saving..." : "Save Delivery Address"}
+                      <span className="relative z-1">{addressSaving ? "Saving..." : "Save Delivery Address"}</span>
                     </button>
 
                     {savedAddresses.length > 0 && (
@@ -999,9 +999,9 @@ export default function Checkout() {
                   <button
                     type="submit"
                     disabled={couponApplying || !couponCode.trim()}
-                    className="rounded-xl bg-stone-900 px-4 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-stone-800 disabled:opacity-40 transition cursor-pointer"
+                    className="rounded-xl bg-stone-900 px-4 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-600 disabled:cursor-not-allowed transition cursor-pointer min-h-[36px]"
                   >
-                    {couponApplying ? "..." : "Apply"}
+                    <span className="relative z-1">{couponApplying ? "..." : "Apply"}</span>
                   </button>
                 </form>
                 {couponMessage && (
@@ -1062,18 +1062,18 @@ export default function Checkout() {
                 type="button"
                 onClick={handlePlaceOrder}
                 disabled={processing || isAddingNewAddress || !activeAddress || stockErrors.length > 0}
-                className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-stone-900 py-4 px-6 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-98 disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-500 cursor-pointer"
+                className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-stone-900 py-3.5 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-98 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-600 cursor-pointer text-center leading-snug min-h-[48px]"
               >
                 {processing ? (
-                  <span>Processing Order...</span>
+                  <span className="relative z-1">Processing Order...</span>
                 ) : stockErrors.length > 0 ? (
-                  <span>Items Out of Stock</span>
+                  <span className="relative z-1">Items Out of Stock</span>
                 ) : isAddingNewAddress || !activeAddress ? (
-                  <span>Save Delivery Address to Continue</span>
+                  <span className="relative z-1">Save Delivery Address to Continue</span>
                 ) : paymentMethod === "COD" ? (
-                  <span>Place Order (Cash on Delivery) • ₹{payableAmount.toLocaleString("en-IN")}</span>
+                  <span className="relative z-1">Place Order (Cash on Delivery) • ₹{payableAmount.toLocaleString("en-IN")}</span>
                 ) : (
-                  <span>Pay ₹{payableAmount.toLocaleString("en-IN")} Securely</span>
+                  <span className="relative z-1">Pay ₹{payableAmount.toLocaleString("en-IN")} Securely</span>
                 )}
               </button>
 

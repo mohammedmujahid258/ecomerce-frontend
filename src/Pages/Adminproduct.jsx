@@ -646,13 +646,15 @@ export default function AdminProducts() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="rounded-2xl bg-stone-900 px-6 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-stone-800 disabled:opacity-50 cursor-pointer"
+                    className="rounded-2xl bg-stone-900 px-6 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-600 disabled:cursor-not-allowed cursor-pointer min-h-[40px]"
                   >
-                    {submitting
-                      ? "Saving..."
-                      : isAddingProduct
-                      ? "Publish Product"
-                      : "Save Modifications"}
+                    <span className="relative z-1">
+                      {submitting
+                        ? "Saving..."
+                        : isAddingProduct
+                        ? "Publish Product"
+                        : "Save Modifications"}
+                    </span>
                   </button>
                 </div>
               </form>

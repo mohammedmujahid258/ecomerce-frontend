@@ -121,14 +121,48 @@ a {
   background: #94a3b8;
 }
 
-/* Touch and button accessibility */
-button, a {
+/* Central Button Stacking & Text Visibility System */
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  position: relative;
+  isolation: isolate;
   -webkit-tap-highlight-color: transparent;
-}
-
-button {
   font-family: inherit;
   line-height: normal;
+  overflow: visible;
+  text-rendering: optimizeLegibility;
+}
+
+/* Guarantee child text, labels, icons, and badges stack cleanly above background fills/gradients */
+button > *,
+[role="button"] > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Pseudo-elements used for backgrounds stay below text content */
+button::before,
+button::after,
+[role="button"]::before,
+[role="button"]::after {
+  z-index: 0;
+}
+
+/* Accessible focus visible rings */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible {
+  outline: 2px solid #18181b;
+  outline-offset: 2px;
+}
+
+/* Ensure disabled buttons communicate status clearly */
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
 @media (max-width: 767px) {

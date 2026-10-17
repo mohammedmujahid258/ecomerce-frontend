@@ -250,12 +250,12 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-xl border border-stone-200 bg-stone-50/60 px-4 py-3 pr-10 text-xs sm:text-sm text-stone-900 outline-none transition focus:border-stone-400 focus:bg-white focus:ring-2 focus:ring-stone-100"
+                    className="w-full rounded-xl border border-stone-200 bg-stone-50/60 px-4 py-3 pr-11 text-xs sm:text-sm text-stone-900 outline-none transition focus:border-stone-400 focus:bg-white focus:ring-2 focus:ring-stone-100"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-1.5 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-1.5 cursor-pointer z-10"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -267,9 +267,9 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full inline-flex items-center justify-center rounded-full bg-stone-900 py-3.5 px-6 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-98 disabled:opacity-50 cursor-pointer"
+                  className="w-full inline-flex items-center justify-center rounded-full bg-stone-900 py-3.5 px-6 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-98 disabled:bg-stone-200 disabled:text-stone-600 disabled:cursor-not-allowed cursor-pointer min-h-[44px]"
                 >
-                  {loading ? "Signing in..." : "Sign In &rarr;"}
+                  <span className="relative z-1">{loading ? "Signing in..." : "Sign In →"}</span>
                 </button>
               </div>
             </form>
@@ -289,16 +289,16 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setSocialProvider("google")}
-                className="flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white py-2.5 px-4 text-xs font-semibold text-stone-700 shadow-2xs hover:bg-stone-50 hover:border-stone-300 transition cursor-pointer"
+                className="flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white py-2.5 px-4 text-xs font-semibold text-stone-800 shadow-2xs hover:bg-stone-50 hover:border-stone-300 transition cursor-pointer min-h-[42px]"
               >
-                <span>Google</span>
+                <span className="relative z-1">Google</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSocialProvider("apple")}
-                className="flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white py-2.5 px-4 text-xs font-semibold text-stone-700 shadow-2xs hover:bg-stone-50 hover:border-stone-300 transition cursor-pointer"
+                className="flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white py-2.5 px-4 text-xs font-semibold text-stone-800 shadow-2xs hover:bg-stone-50 hover:border-stone-300 transition cursor-pointer min-h-[42px]"
               >
-                <span>Apple ID</span>
+                <span className="relative z-1">Apple ID</span>
               </button>
             </div>
 

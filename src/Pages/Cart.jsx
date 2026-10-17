@@ -482,10 +482,10 @@ export default function Cart() {
                                 handleQuantityChange(prod._id, itemQuantity, -1, maxStock)
                               }
                               disabled={isUpdating || itemQuantity <= 1}
-                              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition font-bold"
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 disabled:opacity-40 disabled:text-stone-400 disabled:cursor-not-allowed cursor-pointer transition font-bold"
                               aria-label="Decrease quantity"
                             >
-                              −
+                              <span className="relative z-1">−</span>
                             </button>
                             <span className="w-8 text-center text-xs font-bold text-stone-900">
                               {isUpdating ? "..." : itemQuantity}
@@ -496,10 +496,10 @@ export default function Cart() {
                                 handleQuantityChange(prod._id, itemQuantity, 1, maxStock)
                               }
                               disabled={isUpdating || itemQuantity >= maxStock}
-                              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition font-bold"
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 disabled:opacity-40 disabled:text-stone-400 disabled:cursor-not-allowed cursor-pointer transition font-bold"
                               aria-label="Increase quantity"
                             >
-                              +
+                              <span className="relative z-1">+</span>
                             </button>
                           </div>
 
@@ -616,9 +616,9 @@ export default function Cart() {
                         <button
                           type="submit"
                           disabled={isApplyingCoupon || !couponCode.trim()}
-                          className="rounded-xl bg-stone-900 px-4 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-stone-800 disabled:opacity-40 transition cursor-pointer"
+                          className="rounded-xl bg-stone-900 px-4 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-600 disabled:cursor-not-allowed transition cursor-pointer min-h-[36px]"
                         >
-                          {isApplyingCoupon ? "..." : "Apply"}
+                          <span className="relative z-1">{isApplyingCoupon ? "..." : "Apply"}</span>
                         </button>
                       )}
                     </form>
@@ -649,10 +649,10 @@ export default function Cart() {
                 <button
                   type="button"
                   onClick={() => navigate("/checkout")}
-                  className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-stone-900 py-4 px-6 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-98 cursor-pointer"
+                  className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-stone-900 py-4 px-6 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-98 cursor-pointer min-h-[48px]"
                 >
-                  <span>Proceed to Checkout</span>
-                  <span>&rarr;</span>
+                  <span className="relative z-1">Proceed to Checkout</span>
+                  <span className="relative z-1">&rarr;</span>
                 </button>
 
                 {/* Secondary Continue Shopping link */}

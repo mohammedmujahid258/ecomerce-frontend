@@ -221,19 +221,19 @@ export default function SocialAuthModal({ provider, isOpen, onClose, onSuccess }
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs font-extrabold shadow-md transition cursor-pointer disabled:opacity-60 ${config.btnBg}`}
+                  className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs font-extrabold shadow-md transition cursor-pointer disabled:opacity-60 min-h-[44px] ${config.btnBg}`}
                 >
                   {loading ? (
                     <>
-                      <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
+                      <svg className="animate-spin h-4 w-4 text-white relative z-1" viewBox="0 0 24 24" fill="none">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      <span>Connecting with {provider}...</span>
+                      <span className="relative z-1">Connecting with {provider}...</span>
                     </>
                   ) : (
                     <>
-                      <span>Continue as {currentName}</span>
+                      <span className="relative z-1">Continue as {currentName}</span>
                     </>
                   )}
                 </button>

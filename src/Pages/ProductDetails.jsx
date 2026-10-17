@@ -615,20 +615,20 @@ export default function ProductDetails() {
                         type="button"
                         onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                         disabled={quantity <= 1}
-                        className="flex h-9 w-9 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition font-bold"
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 disabled:opacity-40 disabled:text-stone-400 disabled:cursor-not-allowed cursor-pointer transition font-bold"
                         aria-label="Decrease quantity"
                       >
-                        −
+                        <span className="relative z-1">−</span>
                       </button>
                       <span className="text-xs font-bold text-stone-900 px-2">{quantity}</span>
                       <button
                         type="button"
                         onClick={() => setQuantity((q) => Math.min(maxStock, q + 1))}
                         disabled={quantity >= maxStock}
-                        className="flex h-9 w-9 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition font-bold"
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 disabled:opacity-40 disabled:text-stone-400 disabled:cursor-not-allowed cursor-pointer transition font-bold"
                         aria-label="Increase quantity"
                       >
-                        +
+                        <span className="relative z-1">+</span>
                       </button>
                     </div>
 
@@ -637,10 +637,10 @@ export default function ProductDetails() {
                       type="button"
                       onClick={handleAddToCart}
                       disabled={isAddingCart}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-stone-900 py-3.5 px-8 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-98 disabled:bg-stone-300 disabled:cursor-not-allowed cursor-pointer"
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-stone-900 py-3.5 px-6 sm:px-8 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-98 disabled:bg-stone-200 disabled:text-stone-600 disabled:cursor-not-allowed cursor-pointer min-h-[44px]"
                     >
-                      <CartIcon className="w-4 h-4" />
-                      <span>{isAddingCart ? "Adding to Cart..." : "Add to Cart"}</span>
+                      <CartIcon className="w-4 h-4 shrink-0 relative z-1" />
+                      <span className="relative z-1 whitespace-nowrap">{isAddingCart ? "Adding to Cart..." : "Add to Cart"}</span>
                     </button>
 
                     {/* Wishlist Button */}
@@ -656,7 +656,7 @@ export default function ProductDetails() {
                       aria-label={inWishlist ? "In Wishlist" : "Save to Wishlist"}
                       title={inWishlist ? "Saved in Wishlist" : "Save to Wishlist"}
                     >
-                      <HeartIcon className="w-5 h-5" filled={inWishlist} />
+                      <HeartIcon className="w-5 h-5 relative z-1" filled={inWishlist} />
                     </button>
                   </div>
                 ) : (
@@ -670,10 +670,10 @@ export default function ProductDetails() {
                         type="button"
                         onClick={handleToggleWishlist}
                         disabled={isUpdatingWishlist}
-                        className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-5 py-2 text-xs font-semibold text-stone-800 hover:bg-stone-50 transition cursor-pointer"
+                        className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-5 py-2.5 text-xs font-semibold text-stone-800 hover:bg-stone-50 transition cursor-pointer min-h-[40px]"
                       >
-                        <HeartIcon className="w-4 h-4" filled={inWishlist} />
-                        <span>{inWishlist ? "Saved in Wishlist" : "Save to Wishlist"}</span>
+                        <HeartIcon className="w-4 h-4 relative z-1" filled={inWishlist} />
+                        <span className="relative z-1">{inWishlist ? "Saved in Wishlist" : "Save to Wishlist"}</span>
                       </button>
                     </div>
                   </div>

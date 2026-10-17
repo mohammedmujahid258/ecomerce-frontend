@@ -252,9 +252,9 @@ export default function Products() {
 
             <button
               type="submit"
-              className="rounded-xl bg-stone-900 px-6 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-95 cursor-pointer"
+              className="rounded-xl bg-stone-900 px-6 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-stone-800 active:scale-95 cursor-pointer min-h-[40px]"
             >
-              Search
+              <span className="relative z-1">Search</span>
             </button>
           </form>
 
@@ -384,9 +384,9 @@ export default function Products() {
             <button
               type="button"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
-              className="rounded-full border border-stone-300 bg-white px-8 py-3 text-xs sm:text-sm font-semibold text-stone-900 shadow-xs transition hover:bg-stone-50 hover:border-stone-400 active:scale-95 cursor-pointer"
+              className="rounded-full border border-stone-300 bg-white px-8 py-3 text-xs sm:text-sm font-semibold text-stone-900 shadow-xs transition hover:bg-stone-50 hover:border-stone-400 active:scale-95 cursor-pointer min-h-[44px]"
             >
-              Load More Products ({filteredProducts.length - visibleCount} remaining)
+              <span className="relative z-1">Load More Products ({filteredProducts.length - visibleCount} remaining)</span>
             </button>
             <p className="text-[11px] text-stone-400">
               Showing {visibleCount} of {filteredProducts.length} items
