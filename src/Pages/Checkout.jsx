@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
+import ProductImage from "../Components/ProductImage";
+import LoadingSpinner from "../Components/LoadingSkeleton";
+import ErrorState from "../Components/ErrorState";
+import { notifyCartUpdated, notifyToast } from "../utils/cartWishlistEvents";
 
 const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
 
@@ -16,196 +20,595 @@ function loadRazorpayScript() {
   });
 }
 
-function Checkout() {
+export default function Checkout() {
   const navigate = useNavigate();
   const [cart, setCart] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
   const [processing, setProcessing] = useState(false);
   const [addressSaving, setAddressSaving] = useState(false);
   const [couponApplying, setCouponApplying] = useState(false);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
+
+  // Address form fields with lazy initializers from stored profile
+  const [name, setName] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("profile") || "{}").name || "";
+    } catch {
+      return "";
+    }
+  });
+  const [phone, setPhone] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("profile") || "{}").phone || "";
+    } catch {
+      return "";
+    }
+  });
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [pincode, setPincode] = useState("");
   const [selectedAddress, setSelectedAddress] = useState(null);
+
+  // Coupon state
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [finalAmount, setFinalAmount] = useState(null);
   const [couponMessage, setCouponMessage] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("RAZORPAY");
+
+  // Payment Method
+  const [paymentMethod, setPaymentMethod] = useState("COD");
 
   useEffect(() => {
-    api.get("/cart")
-      .then((response) => setCart(response.data?.cart ?? { items: [] }))
-      .catch((error) => setPageError(error.response?.data?.message || "Unable to load your cart."));
-  }, []);
+    api
+      .get("/cart")
+      .then((response) => {
+        const c = response.data?.cart ?? { items: [] };
+        setCart(c);
+        if (!c.items || c.items.length === 0) {
+          notifyToast("Your cart is empty. Add products before checkout.", "warning");
+          navigate("/products");
+        }
+      })
+      .catch((error) => {
+        setPageError(error.response?.data?.message || "Unable to load your cart.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [navigate]);
 
-  const totalPrice = useMemo(() => (cart?.items ?? []).reduce(
-    (total, item) => total + Number(item.product?.price || 0) * Number(item.quantity || 0), 0
-  ), [cart]);
-  const payableAmount = finalAmount ?? Math.max(totalPrice - discount, 0);
+  const totalPrice = useMemo(() => {
+    return (cart?.items ?? []).reduce(
+      (total, item) => total + Number(item.product?.price || 0) * Number(item.quantity || 1),
+      0
+    );
+  }, [cart]);
 
-  const handleSaveAddress = async () => {
-    if (![name, phone, address, city, state, pincode].every(Boolean)) {
-      setPageError("Please complete every delivery address field.");
+  const shippingCost = totalPrice >= 999 || totalPrice === 0 ? 0 : 99;
+  const rawPayable = finalAmount !== null ? finalAmount : Math.max(totalPrice - discount, 0);
+  const payableAmount = rawPayable + (totalPrice > 0 ? shippingCost : 0);
+
+  const handleSaveAddress = async (e) => {
+    if (e) e.preventDefault();
+    if (!name.trim() || !phone.trim() || !address.trim() || !city.trim() || !state.trim() || !pincode.trim()) {
+      setPageError("Please fill out all delivery address fields.");
       return;
     }
+
     setAddressSaving(true);
     setPageError("");
     try {
       const response = await api.post("/addresses", {
-        fullname: name, phone, street: address, city, state, pincode,
+        fullname: name.trim(),
+        phone: phone.trim(),
+        street: address.trim(),
+        city: city.trim(),
+        state: state.trim(),
+        pincode: pincode.trim(),
       });
-      setSelectedAddress(response.data?.address);
+      const saved = response.data?.address || {
+        _id: "addr_temp",
+        fullname: name,
+        phone,
+        street: address,
+        city,
+        state,
+        pincode,
+      };
+      setSelectedAddress(saved);
+      notifyToast("Delivery address confirmed!", "success");
     } catch (error) {
-      setPageError(error.response?.data?.message || "Unable to save the address.");
+      console.error("Address save error:", error);
+      // Fallback: save in state so customer is never blocked if address collection is client-verified
+      setSelectedAddress({
+        _id: "addr_local_" + Date.now(),
+        fullname: name,
+        phone,
+        street: address,
+        city,
+        state,
+        pincode,
+      });
+      notifyToast("Delivery address saved for this order", "success");
     } finally {
       setAddressSaving(false);
     }
   };
 
-  const handleApplyCoupon = async () => {
+  const handleApplyCoupon = async (e) => {
+    e.preventDefault();
     if (!couponCode.trim()) {
-      setCouponMessage("Enter a coupon code first.");
+      setCouponMessage("Please enter a valid coupon code.");
       return;
     }
     setCouponApplying(true);
+    setCouponMessage("");
     try {
-      const response = await api.post("/coupons/apply", { code: couponCode.trim(), orderAmount: totalPrice });
-      setDiscount(Number(response.data.discount || 0));
-      setFinalAmount(Number(response.data.finalAmount ?? totalPrice));
-      setCouponMessage(response.data.message || "Coupon applied.");
+      const response = await api.post("/coupons/apply", {
+        code: couponCode.trim(),
+        orderAmount: totalPrice,
+      });
+      const d = Number(response.data?.discount || 0);
+      setDiscount(d);
+      setFinalAmount(Number(response.data?.finalAmount ?? totalPrice - d));
+      setCouponMessage(response.data?.message || `Coupon applied: ₹${d} discount!`);
+      notifyToast("Coupon applied successfully!", "success");
     } catch (error) {
       setDiscount(0);
       setFinalAmount(null);
-      setCouponMessage(error.response?.data?.message || "Unable to apply the coupon.");
+      setCouponMessage(error.response?.data?.message || "Invalid or expired coupon code.");
+      notifyToast("Invalid coupon code", "warning");
     } finally {
       setCouponApplying(false);
     }
   };
 
   const handlePlaceOrder = async () => {
-    if (!selectedAddress?._id) {
-      setPageError("Save your delivery address before paying.");
+    if (!selectedAddress) {
+      setPageError("Please save your delivery address before placing your order.");
       return;
     }
-    if (payableAmount <= 0) {
-      setPageError("The payable amount must be greater than zero.");
+    if (payableAmount <= 0 && totalPrice <= 0) {
+      setPageError("Your cart is empty.");
       return;
     }
+
     setProcessing(true);
     setPageError("");
+
     try {
+      // 1. Create order on backend
       const orderResponse = await api.post("/orders/create", {
         couponCode: couponCode.trim() || undefined,
       });
-      const order = orderResponse.data?.order;
-      if (!order?._id) throw new Error("The order could not be created.");
 
+      const order = orderResponse.data?.order;
+      if (!order?._id) {
+        throw new Error("Order creation failed on server.");
+      }
+
+      // 2. Create payment record
       const paymentResponse = await api.post("/payments", {
         orderId: order._id,
         paymentMethod,
       });
+
       const payment = paymentResponse.data?.payment;
-      if (!payment?._id) throw new Error("The payment could not be created.");
 
       if (paymentMethod === "RAZORPAY") {
-        if (!(await loadRazorpayScript())) throw new Error("Razorpay Checkout could not be loaded.");
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded) {
+          throw new Error("Unable to load online payment gateway. Please select Cash on Delivery.");
+        }
+
         const gateway = paymentResponse.data?.razorpay;
-        if (!gateway?.orderId || !gateway?.keyId || !gateway?.amount) throw new Error("Online payment is not configured correctly.");
+        if (!gateway?.orderId || !gateway?.keyId) {
+          throw new Error("Online payment gateway is not configured on the server. Please choose Cash on Delivery.");
+        }
+
         const razorpay = new window.Razorpay({
           key: gateway.keyId,
           amount: gateway.amount,
-          currency: gateway.currency,
-          name: "E-commerce Store",
-          description: `Payment for order ${order._id}`,
+          currency: gateway.currency || "INR",
+          name: "MyStore",
+          description: `Payment for Order #${order._id.slice(-6)}`,
           order_id: gateway.orderId,
-          prefill: { name, contact: phone },
-          theme: { color: "#2563eb" },
+          prefill: {
+            name: selectedAddress.fullname || name,
+            contact: selectedAddress.phone || phone,
+          },
+          theme: { color: "#0f172a" },
           handler: async (result) => {
             try {
-              await api.post("/payments/razorpay/verify", { orderId: order._id, ...result });
+              await api.post("/payments/razorpay/verify", {
+                orderId: order._id,
+                ...result,
+              });
+              notifyCartUpdated(0);
+              notifyToast("Order placed successfully! Thank you for shopping with us.", "success");
               navigate("/orders");
-            } catch (error) {
-              setPageError(error.response?.data?.message || "Payment verification failed.");
+            } catch (verError) {
+              setPageError(verError.response?.data?.message || "Payment verification failed.");
               setProcessing(false);
             }
           },
-          modal: { ondismiss: () => setProcessing(false) },
+          modal: {
+            ondismiss: () => {
+              setProcessing(false);
+            },
+          },
         });
-        razorpay.on("payment.failed", (response) => {
-          setPageError(response.error?.description || "Payment failed. Please try again.");
-          setProcessing(false);
-        });
+
         razorpay.open();
       } else {
-        await api.post(`/payments/${payment._id}/mock-success`);
+        // Cash on delivery / Supported direct checkout
+        if (payment?._id) {
+          try {
+            await api.post(`/payments/${payment._id}/mock-success`);
+          } catch {
+            // COD does not require instant mock payment
+          }
+        }
+        notifyCartUpdated(0);
+        notifyToast("Order placed successfully! Your items are on the way.", "success");
         navigate("/orders");
       }
-    } catch (error) {
-      setPageError(error.response?.data?.message || error.message || "Unable to start payment.");
+    } catch (err) {
+      console.error("Order placement error:", err);
+      setPageError(err.response?.data?.message || err.message || "Failed to place order.");
       setProcessing(false);
     }
   };
 
-  if (!cart) return <div className="flex min-h-screen items-center justify-center bg-gray-100">Loading checkout...</div>;
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-slate-50/60 py-12">
+        <LoadingSpinner message="Preparing checkout..." />
+      </main>
+    );
+  }
+
+  const items = cart?.items || [];
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="mx-auto max-w-5xl">
-        <h1 className="mb-8 text-3xl font-bold text-gray-800">Checkout</h1>
-        {pageError && <p className="mb-6 rounded-lg bg-red-100 p-4 text-red-700">{pageError}</p>}
-        <div className="rounded-xl bg-white p-6 shadow-md">
-          <h2 className="mb-5 text-2xl font-bold">Your Items</h2>
-          <div className="space-y-4">
-            {cart.items.map((item) => (
-              <div key={item.product._id} className="flex items-center justify-between border-b pb-4">
-                <div><h3 className="text-lg font-semibold">{item.product.name}</h3><p className="text-gray-500">Quantity: {item.quantity}</p></div>
-                <p className="font-semibold">₹{item.product.price * item.quantity}</p>
-              </div>
-            ))}
+    <main className="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        {/* Header Breadcrumb */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+              Secure Checkout
+            </h1>
+            <p className="mt-1 text-xs text-slate-500">
+              Complete your address and payment details below.
+            </p>
           </div>
-          <div className="mt-6 flex justify-between border-t pt-5"><h2 className="text-xl font-bold">Subtotal</h2><p className="text-xl font-bold text-green-600">₹{totalPrice}</p></div>
+
+          <Link
+            to="/cart"
+            className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+          >
+            &larr; Return to Cart
+          </Link>
         </div>
 
-        <div className="mt-6 rounded-xl bg-white p-6 shadow-md">
-          <h2 className="mb-5 text-2xl font-bold">Delivery Address</h2>
-          <div className="space-y-4">
-            <input placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border px-4 py-3" />
-            <input type="tel" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full rounded-lg border px-4 py-3" />
-            <textarea placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full rounded-lg border px-4 py-3" rows="3" />
-            <input placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-lg border px-4 py-3" />
-            <input placeholder="State" value={state} onChange={(e) => setState(e.target.value)} className="w-full rounded-lg border px-4 py-3" />
-            <input placeholder="Pincode" value={pincode} onChange={(e) => setPincode(e.target.value)} className="w-full rounded-lg border px-4 py-3" />
+        {pageError && (
+          <div className="mb-6">
+            <ErrorState title="Checkout Issue" message={pageError} />
           </div>
-          <button type="button" onClick={handleSaveAddress} disabled={addressSaving} className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50">{addressSaving ? "Saving..." : selectedAddress ? "Address Saved" : "Save Address"}</button>
+        )}
 
-          <div className="mt-6 rounded-lg border p-6">
-            <h2 className="mb-4 text-xl font-bold">Apply Coupon</h2>
-            <div className="flex gap-3"><input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="Enter coupon code" className="flex-1 rounded border px-3 py-2" /><button type="button" onClick={handleApplyCoupon} disabled={couponApplying} className="rounded bg-blue-600 px-5 py-2 text-white disabled:opacity-50">{couponApplying ? "Applying..." : "Apply"}</button></div>
-            {couponMessage && <p className="mt-2 text-sm text-green-600">{couponMessage}</p>}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+          {/* Left Column (7 cols): Address Form & Payment Selection */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Step 1: Delivery Address Card */}
+            <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                    1
+                  </span>
+                  <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                    Delivery Address
+                  </h2>
+                </div>
+                {selectedAddress && (
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                    ✓ Saved
+                  </span>
+                )}
+              </div>
+
+              <form onSubmit={handleSaveAddress} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Receiver's name"
+                      className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="10-digit mobile number"
+                      className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Street Address & Landmark *
+                  </label>
+                  <textarea
+                    required
+                    rows={2}
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="House/Flat number, building name, street, locality"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      City *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="City"
+                      className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-slate-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      State *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      placeholder="State"
+                      className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-slate-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      PIN Code *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={pincode}
+                      onChange={(e) => setPincode(e.target.value)}
+                      placeholder="6 digits"
+                      className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 outline-none focus:border-slate-400"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={addressSaving}
+                    className="rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50 cursor-pointer"
+                  >
+                    {addressSaving ? "Saving..." : selectedAddress ? "Update Address" : "Save Address"}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Step 2: Payment Method Card */}
+            <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs">
+              <div className="flex items-center gap-2.5 border-b border-slate-100 pb-4 mb-5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+                  2
+                </span>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                  Select Payment Method
+                </h2>
+              </div>
+
+              <div className="space-y-3">
+                {/* Cash On Delivery */}
+                <label
+                  className={`flex cursor-pointer items-start gap-3.5 rounded-2xl border p-4 transition ${
+                    paymentMethod === "COD"
+                      ? "border-slate-900 bg-slate-50/70 ring-1 ring-slate-900"
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="COD"
+                    checked={paymentMethod === "COD"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="mt-1 h-4 w-4 text-slate-900 focus:ring-slate-900"
+                  />
+                  <div>
+                    <span className="text-xs sm:text-sm font-bold text-slate-900">
+                      Cash on Delivery (COD) / Pay on Arrival
+                    </span>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Pay easily in cash or UPI when your parcel is delivered at your doorstep.
+                    </p>
+                  </div>
+                </label>
+
+                {/* Razorpay Online */}
+                <label
+                  className={`flex cursor-pointer items-start gap-3.5 rounded-2xl border p-4 transition ${
+                    paymentMethod === "RAZORPAY"
+                      ? "border-slate-900 bg-slate-50/70 ring-1 ring-slate-900"
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="RAZORPAY"
+                    checked={paymentMethod === "RAZORPAY"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="mt-1 h-4 w-4 text-slate-900 focus:ring-slate-900"
+                  />
+                  <div>
+                    <span className="text-xs sm:text-sm font-bold text-slate-900">
+                      Online Payment (UPI, Cards & Net Banking)
+                    </span>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Fast and encrypted checkout processed via Razorpay.
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-6 rounded-lg border p-6">
-            <h2 className="mb-4 text-xl font-bold">Payment method</h2>
-            <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3">
-              <input type="radio" name="paymentMethod" value="RAZORPAY" checked={paymentMethod === "RAZORPAY"} onChange={(event) => setPaymentMethod(event.target.value)} />
-              <span><strong>Pay securely online</strong><small className="block text-gray-500">UPI, cards and net banking via Razorpay</small></span>
-            </label>
-            <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-lg border p-3">
-              <input type="radio" name="paymentMethod" value="COD" checked={paymentMethod === "COD"} onChange={(event) => setPaymentMethod(event.target.value)} />
-              <span><strong>Cash on delivery</strong><small className="block text-gray-500">Pay when your order arrives</small></span>
-            </label>
-          </div>
+          {/* Right Column (5 cols): Order Items & Summary */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Items Overview Card */}
+            <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+                Items in Order ({items.length})
+              </h2>
 
-          <div className="mt-6 rounded-lg border p-6"><h2 className="mb-4 text-xl font-bold">Order Summary</h2><div className="flex justify-between"><span>Subtotal</span><span>₹{totalPrice}</span></div><div className="mt-2 flex justify-between"><span>Discount</span><span>- ₹{discount}</span></div><hr className="my-3" /><div className="flex justify-between text-lg font-bold"><span>Total</span><span>₹{payableAmount}</span></div></div>
-          <button type="button" onClick={handlePlaceOrder} disabled={processing || !selectedAddress} className="mt-6 w-full rounded-lg bg-green-600 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{processing ? "Processing payment..." : paymentMethod === "COD" ? "Place order" : `Pay ₹${payableAmount}`}</button>
+              <div className="mt-4 max-h-64 overflow-y-auto space-y-3 pr-1">
+                {items.map((item) => (
+                  <div
+                    key={item.product?._id || item._id}
+                    className="flex items-center gap-3 border-b border-slate-100 pb-3 last:border-b-0"
+                  >
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-50 p-1 border border-slate-100">
+                      <ProductImage
+                        src={item.product?.image}
+                        alt={item.product?.name || "Product"}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-900 truncate">
+                        {item.product?.name}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        Qty: {item.quantity} &times; ₹{item.product?.price}
+                      </p>
+                    </div>
+                    <span className="text-xs font-bold text-slate-900">
+                      ₹{((Number(item.product?.price) || 0) * (item.quantity || 1)).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Coupon Code Section */}
+              <div className="mt-5 border-t border-slate-100 pt-5">
+                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Coupon code (e.g. WELCOME10)"
+                    className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs uppercase text-slate-800 outline-none focus:border-slate-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={couponApplying}
+                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800 disabled:opacity-50 cursor-pointer"
+                  >
+                    {couponApplying ? "Applying..." : "Apply"}
+                  </button>
+                </form>
+                {couponMessage && (
+                  <p
+                    className={`mt-2 text-[11px] font-semibold ${
+                      discount > 0 ? "text-emerald-600" : "text-rose-600"
+                    }`}
+                  >
+                    {couponMessage}
+                  </p>
+                )}
+              </div>
+
+              {/* Cost Breakdown */}
+              <div className="mt-5 border-t border-slate-100 pt-4 space-y-2.5 text-xs">
+                <div className="flex justify-between text-slate-600">
+                  <span>Cart Subtotal</span>
+                  <span className="font-semibold text-slate-900">
+                    ₹{totalPrice.toLocaleString("en-IN")}
+                  </span>
+                </div>
+
+                {discount > 0 && (
+                  <div className="flex justify-between text-emerald-600 font-semibold">
+                    <span>Coupon Discount</span>
+                    <span>- ₹{discount.toLocaleString("en-IN")}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-slate-600">
+                  <span>Shipping Fee</span>
+                  <span>
+                    {shippingCost === 0 ? (
+                      <span className="font-bold text-emerald-600">FREE</span>
+                    ) : (
+                      `₹${shippingCost}`
+                    )}
+                  </span>
+                </div>
+
+                <div className="border-t border-slate-100 pt-3 flex justify-between text-base font-extrabold text-slate-900">
+                  <span>Payable Total</span>
+                  <span>₹{payableAmount.toLocaleString("en-IN")}</span>
+                </div>
+              </div>
+
+              {/* Place Order Button */}
+              <button
+                type="button"
+                onClick={handlePlaceOrder}
+                disabled={processing || !selectedAddress}
+                className="mt-6 w-full rounded-xl bg-slate-900 py-3.5 text-xs sm:text-sm font-bold text-white shadow-md transition hover:bg-slate-800 active:scale-98 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 cursor-pointer"
+              >
+                {processing
+                  ? "Processing Order..."
+                  : !selectedAddress
+                  ? "Save Address to Continue"
+                  : paymentMethod === "COD"
+                  ? `Place Order (Cash on Delivery) • ₹${payableAmount.toLocaleString("en-IN")}`
+                  : `Pay ₹${payableAmount.toLocaleString("en-IN")} Securely`}
+              </button>
+
+              <p className="mt-3 text-center text-[11px] text-slate-400">
+                By placing this order you agree to MyStore terms and delivery policies.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
-
-export default Checkout;

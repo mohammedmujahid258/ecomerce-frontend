@@ -1,208 +1,245 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { api } from "../api";
+import ProductImage from "../Components/ProductImage";
+import LoadingSpinner from "../Components/LoadingSkeleton";
+import EmptyState from "../Components/EmptyState";
+import ErrorState from "../Components/ErrorState";
+import { notifyCartUpdated, notifyWishlistUpdated, notifyToast } from "../utils/cartWishlistEvents";
 
-function Wishlist() {
-  const navigate = useNavigate();
+export default function Wishlist() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [cartMessage, setCartMessage] = useState("");
+  const [processingId, setProcessingId] = useState(null);
+
+  const fetchWishlist = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await api.get("/wishlist");
+      const list = response.data?.wishlist?.products ?? [];
+      setProducts(list);
+      notifyWishlistUpdated(list.length);
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setProducts([]);
+        notifyWishlistUpdated(0);
+      } else {
+        console.error("Error fetching wishlist:", err);
+        setError("Unable to load your saved items. Please check your connection.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchWishlist = async () => {
-      try {
-        const response = await api.get("/wishlist");
-        console.log("response data :", response.data);
-        setProducts(response.data?.wishlist?.products ?? []);
-      } catch (err) {
+    let isMounted = true;
+    api
+      .get("/wishlist")
+      .then((response) => {
+        if (!isMounted) return;
+        const list = response.data?.wishlist?.products ?? [];
+        setProducts(list);
+        notifyWishlistUpdated(list.length);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
         if (err.response?.status === 404) {
           setProducts([]);
+          notifyWishlistUpdated(0);
         } else {
-          console.log("error fetching wishlist : ", err);
-          setError(err.response?.data?.message || "Unable to load wishlist");
+          console.error("Error fetching wishlist:", err);
+          setError("Unable to load your saved items. Please check your connection.");
         }
-      } finally {
-        setLoading(false);
-      }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
     };
-    fetchWishlist();
   }, []);
 
-  const removeFromWishlist = async (productId) => {
+  const handleRemove = async (productId, name = "Product") => {
+    setProcessingId(productId);
     try {
       const response = await api.delete("/wishlist", {
         data: { productId },
       });
-      console.log("Remove wishlist response:", response.data);
-      setProducts(response.data?.wishlist?.products ?? []);
+      const updated = response.data?.wishlist?.products ?? [];
+      setProducts(updated);
+      notifyToast(`Removed ${name} from your wishlist`, "info");
+      notifyWishlistUpdated(updated.length);
     } catch (err) {
-      console.log("error removing from wishlist", err);
+      console.error("Error removing from wishlist:", err);
+      notifyToast("Failed to remove item", "error");
+    } finally {
+      setProcessingId(null);
     }
   };
 
-  const addToCart = async (productId) => {
+  const handleMoveToCart = async (product) => {
+    const productId = product._id;
+    if ((product.stock ?? 0) <= 0) {
+      notifyToast("This product is currently out of stock", "warning");
+      return;
+    }
+
+    setProcessingId(productId);
     try {
-      const response = await api.post("/cart", {
-        productId: productId,
+      await api.post("/cart", {
+        productId,
         quantity: 1,
       });
-      console.log("Add to cart response :", response.data);
-      setCartMessage("Item added to cart successfully! 🛒");
-      setTimeout(() => setCartMessage(""), 3000);
+
+      // Remove from wishlist upon moving to cart
+      const response = await api.delete("/wishlist", {
+        data: { productId },
+      });
+      const updated = response.data?.wishlist?.products ?? [];
+      setProducts(updated);
+
+      notifyToast(`Moved "${product.name}" to your cart! 🛒`, "success");
+      notifyCartUpdated();
+      notifyWishlistUpdated(updated.length);
     } catch (err) {
-      console.log("Error adding to cart :", err);
+      console.error("Error moving to cart:", err);
+      notifyToast("Failed to move item to cart", "error");
+    } finally {
+      setProcessingId(null);
     }
   };
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#fff7d6] px-4 py-8">
-        <div className="rounded-3xl bg-white p-8 text-center shadow-[0_24px_70px_rgb(32_32_22/18%)]">
-          <span className="animate-pulse text-3xl font-black text-[#a48500]">✦</span>
-          <p className="mt-3 text-sm font-bold text-[#202016]">Loading wishlist..</p>
-        </div>
+      <main className="min-h-screen bg-slate-50/60 py-12">
+        <LoadingSpinner message="Loading your saved wishlist..." />
       </main>
     );
   }
 
   if (error) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#fff7d6] px-4 py-8">
-        <div className="rounded-3xl bg-white p-8 text-center shadow-[0_24px_70px_rgb(32_32_22/18%)]">
-          <span className="text-3xl font-black text-rose-500">⚠️</span>
-          <p className="mt-3 rounded-md bg-rose-50 px-4 py-2.5 text-xs font-semibold text-rose-600">{error}</p>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="mt-4 rounded-xl bg-[#202016] px-5 py-2 text-xs font-bold text-white transition hover:bg-[#e7b900] hover:text-[#202016] cursor-pointer"
-          >
-            ← Back
-          </button>
+      <main className="min-h-screen bg-slate-50/60 py-12 px-4">
+        <div className="mx-auto max-w-lg">
+          <ErrorState
+            title="Wishlist Error"
+            message={error}
+            onRetry={fetchWishlist}
+          />
         </div>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#fff7d6] px-4 py-8 sm:px-6">
-      <div className="w-full max-w-5xl overflow-hidden rounded-3xl bg-white p-4 sm:p-6 shadow-[0_24px_70px_rgb(32_32_22/18%)]">
-        {/* Golden Mesh Header Banner - Matching Login Page Design */}
-        <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-[#ffe88a] via-[#e7b900] to-[#fff7d6] p-6 sm:p-8 text-[#202016]">
-          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/35 blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#a48500]/25 blur-3xl" />
-
-          <div className="relative flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-black text-[#202016]">✦</span>
-                <p className="text-xs font-bold uppercase tracking-wider text-[#514810]">
-                  Your Personal Collection
-                </p>
-              </div>
-              <h1 className="mt-2 text-2xl sm:text-3xl font-black tracking-tight text-[#202016]">
-                My Wishlist ❤️
-              </h1>
-              <p className="mt-1 text-xs text-[#514810]">
-                Access your favorite items anytime and move them to cart with a single click.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="rounded-xl border border-[#202016]/20 bg-white/80 px-4 py-2 text-xs font-bold text-[#202016] shadow-sm backdrop-blur-sm transition hover:bg-white hover:scale-[1.02] cursor-pointer active:scale-95"
-            >
-              ← Back
-            </button>
+    <main className="min-h-screen bg-slate-50/60 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+              My Saved Items
+            </h1>
+            <p className="mt-1 text-xs text-slate-500">
+              {products.length} {products.length === 1 ? "item" : "items"} saved in your personal wishlist
+            </p>
           </div>
+
+          <Link
+            to="/products"
+            className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+          >
+            &larr; Explore Catalog
+          </Link>
         </div>
 
-        {cartMessage && (
-          <div className="mb-4 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs font-bold text-emerald-700 shadow-sm">
-            {cartMessage}
-          </div>
-        )}
-
         {products.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-            <span className="text-3xl font-black text-[#a48500]">✦</span>
-            <p className="mt-3 text-lg font-bold text-[#202016]">
-              Your wishlist is empty.
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Browse products and tap the heart icon to save items for later.
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate("/products")}
-              className="mt-5 inline-block rounded-xl bg-[#e7b900] px-6 py-2.5 text-xs font-black text-[#202016] shadow-sm transition hover:bg-[#202016] hover:text-white cursor-pointer"
-            >
-              Browse Products
-            </button>
-          </div>
+          <EmptyState
+            icon="❤️"
+            title="Your wishlist is empty"
+            description="Explore our store and tap the heart icon on any product to save it for later."
+            actionLabel="Discover Products"
+            actionLink="/products"
+          />
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
-              <div
-                key={product._id}
-                className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-[#e7b900] hover:shadow-md"
-              >
-                <div>
-                  {product.image && (
-                    <div className="mb-3.5 flex h-44 w-full items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-2">
-                      <img
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {products.map((product) => {
+              const inStock = (product.stock ?? 0) > 0;
+              const isProcessing = processingId === product._id;
+
+              return (
+                <div
+                  key={product._id}
+                  className="group flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs transition hover:shadow-md"
+                >
+                  <div>
+                    {/* Image */}
+                    <Link
+                      to={`/products/${product._id}`}
+                      className="relative block aspect-square w-full overflow-hidden rounded-xl bg-slate-50 p-4 transition group-hover:bg-slate-100/70"
+                    >
+                      <ProductImage
                         src={product.image}
                         alt={product.name}
-                        className="h-full w-full object-contain transition duration-300 hover:scale-105"
+                        className="h-full w-full object-contain"
                       />
+                      {!inStock && (
+                        <span className="absolute top-2.5 right-2.5 rounded-md bg-slate-900/80 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
+                          Out of stock
+                        </span>
+                      )}
+                    </Link>
+
+                    {/* Meta */}
+                    <div className="mt-3">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        {product.category || "General"}
+                      </span>
+                      <Link to={`/products/${product._id}`}>
+                        <h3 className="mt-1 text-sm font-bold text-slate-900 truncate hover:text-blue-600">
+                          {product.name}
+                        </h3>
+                      </Link>
+                      <p className="mt-2 text-base font-extrabold text-slate-900">
+                        ₹{Number(product.price || 0).toLocaleString("en-IN")}
+                      </p>
                     </div>
-                  )}
-
-                  <div className="flex items-start justify-between gap-2">
-                    <h2 className="text-base font-bold text-[#202016] line-clamp-1">
-                      {product.name}
-                    </h2>
-                    <span className="text-xs font-black text-[#a48500]">✦</span>
                   </div>
 
-                  <p className="mt-1.5 text-xs text-slate-500 line-clamp-2">
-                    {product.description}
-                  </p>
+                  {/* Actions Row */}
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveToCart(product)}
+                      disabled={isProcessing || !inStock}
+                      className="w-full rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      {isProcessing
+                        ? "Moving..."
+                        : inStock
+                        ? "Move to Cart 🛒"
+                        : "Out of Stock"}
+                    </button>
 
-                  <div className="mt-3 flex items-baseline justify-between">
-                    <p className="text-lg font-black text-[#202016]">
-                      ₹{product.price}
-                    </p>
-                    <p className="text-[11px] font-semibold text-slate-500">
-                      Stock: {product.stock}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(product._id, product.name)}
+                      disabled={isProcessing}
+                      className="text-center text-xs font-semibold text-slate-400 hover:text-rose-600 transition py-1 cursor-pointer"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
-
-                <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => addToCart(product._id)}
-                    className="w-full rounded-xl bg-[#e7b900] py-2.5 text-xs font-black text-[#202016] shadow-sm transition hover:bg-[#202016] hover:text-white cursor-pointer"
-                  >
-                    Add to Cart
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeFromWishlist(product._id)}
-                    className="w-full rounded-xl border border-slate-200 bg-white py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-50 hover:border-rose-200 cursor-pointer"
-                  >
-                    Remove from Wishlist
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
     </main>
   );
 }
-
-export default Wishlist;

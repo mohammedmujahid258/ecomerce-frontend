@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { notifyToast } from "../utils/cartWishlistEvents";
 
-function AdminDashboard() {
+export default function AdminDashboard() {
   const navigate = useNavigate();
   const [currentPin, setCurrentPin] = useState(
     () => localStorage.getItem("admin_master_pin") || "1234"
   );
   const [newPin, setNewPin] = useState("");
-  const [pinChangeMsg, setPinChangeMsg] = useState("");
   const [showPinChange, setShowPinChange] = useState(false);
 
   const handleLockSession = () => {
     sessionStorage.removeItem("admin_pin_verified");
+    notifyToast("Admin session locked", "info");
     navigate("/admin");
     window.location.reload();
   };
@@ -19,35 +20,32 @@ function AdminDashboard() {
   const handleUpdatePin = (event) => {
     event.preventDefault();
     if (newPin.trim().length < 4) {
-      setPinChangeMsg("PIN must be at least 4 digits.");
+      notifyToast("PIN must be at least 4 digits", "warning");
       return;
     }
     localStorage.setItem("admin_master_pin", newPin.trim());
     setCurrentPin(newPin.trim());
     setNewPin("");
-    setPinChangeMsg("✅ Admin PIN updated successfully!");
-    setTimeout(() => {
-      setPinChangeMsg("");
-      setShowPinChange(false);
-    }, 2000);
+    setShowPinChange(false);
+    notifyToast("Admin Security PIN updated successfully!", "success");
   };
 
   return (
-    <div className="min-h-screen bg-[#fff7d6] p-6 sm:p-10">
+    <main className="min-h-screen bg-slate-50/70 p-4 sm:p-8 lg:p-10">
       <div className="mx-auto max-w-6xl">
-        {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-300 pb-6">
+        {/* Executive Top Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-6">
           <div>
             <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#e7b900] text-sm">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-white text-sm font-bold">
                 🛡️
               </span>
-              <h1 className="text-3xl font-black text-[#202016]">
-                Admin Dashboard
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
+                Store Administration
               </h1>
             </div>
-            <p className="mt-1 text-xs font-semibold text-[#514810]">
-              Full administrative controls & security management.
+            <p className="mt-1 text-xs text-slate-500">
+              Executive controls for catalog inventory, orders fulfillment, and user accounts.
             </p>
           </div>
 
@@ -55,90 +53,95 @@ function AdminDashboard() {
             <button
               type="button"
               onClick={handleLockSession}
-              className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-rose-600 cursor-pointer"
-              title="Lock admin session immediately"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-rose-600 transition cursor-pointer"
             >
               🔒 Lock Session
             </button>
             <Link
               to="/"
-              className="rounded-lg bg-[#202016] px-4 py-2 text-xs font-bold text-white shadow transition hover:bg-[#e7b900] hover:text-[#202016]"
+              className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-2xs transition hover:bg-slate-800"
             >
-              ← Back to Store
+              &larr; View Storefront
             </Link>
           </div>
         </div>
 
-        {/* Management Cards Grid */}
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
+        {/* Management Modules Grid */}
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+          {/* Products Module */}
           <Link
             to="/admin/products"
-            className="group block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-[#202016] hover:shadow-lg"
+            className="group flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs transition hover:border-slate-400 hover:shadow-md hover:-translate-y-1"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff0a8] text-2xl">
-              📦
+            <div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 text-2xl group-hover:scale-110 transition">
+                📦
+              </div>
+              <h2 className="mt-5 text-lg font-bold text-slate-900 group-hover:text-blue-600">
+                Products & Inventory
+              </h2>
+              <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                Add new products with photo uploads, modify prices, track stock availability, and delete discontinued items.
+              </p>
             </div>
-            <h2 className="mt-4 text-xl font-black text-[#202016] group-hover:text-[#a48500]">
-              Products
-            </h2>
-            <p className="mt-1 text-xs text-slate-600">
-              Add new catalog products, update prices, inventory, and remove items.
-            </p>
-            <span className="mt-4 inline-block text-xs font-bold text-[#202016]">
-              Manage Products →
+            <span className="mt-6 inline-flex items-center gap-1 text-xs font-bold text-slate-900 group-hover:text-blue-600">
+              Manage Products &rarr;
             </span>
           </Link>
 
+          {/* Orders Module */}
           <Link
             to="/admin/orders"
-            className="group block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-[#202016] hover:shadow-lg"
+            className="group flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs transition hover:border-slate-400 hover:shadow-md hover:-translate-y-1"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff0a8] text-2xl">
-              🛍️
+            <div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 text-2xl group-hover:scale-110 transition">
+                🛍️
+              </div>
+              <h2 className="mt-5 text-lg font-bold text-slate-900 group-hover:text-emerald-600">
+                Customer Orders
+              </h2>
+              <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                Review all incoming customer purchases, inspect destination shipping addresses, and update fulfillment status.
+              </p>
             </div>
-            <h2 className="mt-4 text-xl font-black text-[#202016] group-hover:text-[#a48500]">
-              Orders
-            </h2>
-            <p className="mt-1 text-xs text-slate-600">
-              Track customer orders, check shipping details, and update statuses.
-            </p>
-            <span className="mt-4 inline-block text-xs font-bold text-[#202016]">
-              Manage Orders →
+            <span className="mt-6 inline-flex items-center gap-1 text-xs font-bold text-slate-900 group-hover:text-emerald-600">
+              Manage Orders &rarr;
             </span>
           </Link>
 
+          {/* Users Module */}
           <Link
             to="/admin/all/users"
-            className="group block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-[#202016] hover:shadow-lg"
+            className="group flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs transition hover:border-slate-400 hover:shadow-md hover:-translate-y-1"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#fff0a8] text-2xl">
-              👥
+            <div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 text-2xl group-hover:scale-110 transition">
+                👥
+              </div>
+              <h2 className="mt-5 text-lg font-bold text-slate-900 group-hover:text-purple-600">
+                User Directory
+              </h2>
+              <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                Inspect registered customer profiles, emails, account IDs, and administrative access privileges.
+              </p>
             </div>
-            <h2 className="mt-4 text-xl font-black text-[#202016] group-hover:text-[#a48500]">
-              Users
-            </h2>
-            <p className="mt-1 text-xs text-slate-600">
-              View registered users, customer emails, and role permissions.
-            </p>
-            <span className="mt-4 inline-block text-xs font-bold text-[#202016]">
-              Manage Users →
+            <span className="mt-6 inline-flex items-center gap-1 text-xs font-bold text-slate-900 group-hover:text-purple-600">
+              Manage Users &rarr;
             </span>
           </Link>
         </div>
 
-        {/* Admin Security PIN Settings Card */}
-        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        {/* Security PIN Settings Box */}
+        <div className="mt-8 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🔐</span>
-                <h3 className="text-base font-bold text-[#202016]">
-                  Master Security PIN Protection
-                </h3>
-              </div>
-              <p className="mt-0.5 text-xs text-slate-500">
-                Your 4-digit PIN is active. Current PIN:{" "}
-                <span className="font-mono font-bold text-[#202016]">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <span>🔐</span> Master Security PIN
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Secondary authentication code protecting your admin session. Current PIN:{" "}
+                <span className="font-mono font-bold text-slate-900">
                   {"•".repeat(currentPin.length)}
                 </span>
               </p>
@@ -147,50 +150,38 @@ function AdminDashboard() {
             <button
               type="button"
               onClick={() => setShowPinChange(!showPinChange)}
-              className="self-start rounded-lg bg-slate-100 px-3.5 py-2 text-xs font-bold text-[#202016] transition hover:bg-[#e7b900] cursor-pointer"
+              className="self-start rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
             >
-              {showPinChange ? "Close PIN Settings" : "Change Security PIN ✏️"}
+              {showPinChange ? "Close PIN Form" : "Change Security PIN"}
             </button>
           </div>
 
           {showPinChange && (
-            <form onSubmit={handleUpdatePin} className="mt-5 border-t border-slate-100 pt-5">
-              <label
-                htmlFor="new-admin-pin"
-                className="block text-xs font-bold text-[#202016]"
-              >
-                Set New Master PIN (4 to 8 digits)
+            <form onSubmit={handleUpdatePin} className="mt-5 border-t border-slate-100 pt-5 max-w-sm">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                New Master PIN (4 to 8 digits)
               </label>
-              <div className="mt-2 flex flex-col sm:flex-row gap-2 max-w-md">
+              <div className="flex gap-2">
                 <input
-                  id="new-admin-pin"
                   type="text"
-                  maxLength="8"
+                  maxLength={8}
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value)}
                   placeholder="e.g. 5678"
-                  className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono font-bold text-[#202016] outline-none focus:border-[#e7b900] focus:ring-2 focus:ring-[#fff0a8]"
+                  className="flex-1 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-slate-400"
                   required
                 />
                 <button
                   type="submit"
-                  className="rounded-lg bg-[#e7b900] px-4 py-2 text-xs font-black text-[#202016] transition hover:bg-[#202016] hover:text-white cursor-pointer"
+                  className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800 cursor-pointer"
                 >
-                  Save New PIN
+                  Save PIN
                 </button>
               </div>
-
-              {pinChangeMsg && (
-                <p className="mt-2 text-xs font-bold text-emerald-700">
-                  {pinChangeMsg}
-                </p>
-              )}
             </form>
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }
-
-export default AdminDashboard;

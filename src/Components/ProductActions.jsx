@@ -1,34 +1,35 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
+import { notifyCartUpdated, notifyWishlistUpdated, notifyToast } from "../utils/cartWishlistEvents";
 
-function CartIcon({ className = "w-3.5 h-3.5" }) {
+function CartIcon({ className = "w-4 h-4" }) {
   return (
     <svg
       className={className}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2.2"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <circle cx="9" cy="21" r="1" />
-      <circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+      <circle cx="8" cy="21" r="1" />
+      <circle cx="19" cy="21" r="1" />
+      <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
     </svg>
   );
 }
 
-function HeartIcon({ className = "w-3.5 h-3.5", filled = false }) {
+function HeartIcon({ className = "w-4 h-4", filled = false }) {
   return (
     <svg
       className={className}
       viewBox="0 0 24 24"
       fill={filled ? "#e11d48" : "none"}
       stroke={filled ? "#e11d48" : "currentColor"}
-      strokeWidth="2.2"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
@@ -38,9 +39,8 @@ function HeartIcon({ className = "w-3.5 h-3.5", filled = false }) {
   );
 }
 
-function ProductActions({ productId, showText = false }) {
+function ProductActions({ productId, inStock = true, showText = false, onActionComplete }) {
   const navigate = useNavigate();
-  const [message, setMessage] = useState("");
   const [inWishlist, setInWishlist] = useState(false);
   const [loadingAction, setLoadingAction] = useState("");
 
@@ -50,7 +50,13 @@ function ProductActions({ productId, showText = false }) {
 
     const token = localStorage.getItem("token");
     if (!token) {
+      notifyToast("Please sign in to save items or add to cart", "info");
       navigate("/login");
+      return;
+    }
+
+    if (actionType === "cart" && !inStock) {
+      notifyToast("Sorry, this item is currently out of stock", "warning");
       return;
     }
 
@@ -60,26 +66,32 @@ function ProductActions({ productId, showText = false }) {
         if (inWishlist) {
           await api.delete("/wishlist", { data: { productId } });
           setInWishlist(false);
-          setMessage("Removed");
+          notifyToast("Removed from your wishlist", "info");
         } else {
           await api.post("/wishlist", { productId });
           setInWishlist(true);
-          setMessage("Saved! ❤️");
+          notifyToast("Saved to your wishlist", "success");
         }
+        notifyWishlistUpdated();
       } else {
         await api.post("/cart", {
           productId,
           quantity: 1,
         });
-        setMessage("Added! 🛒");
+        notifyToast("Added to your shopping cart", "success");
+        notifyCartUpdated();
       }
-      window.setTimeout(() => setMessage(""), 2000);
+
+      if (onActionComplete) {
+        onActionComplete(actionType);
+      }
     } catch (error) {
       if (error.response?.status === 401) {
+        notifyToast("Session expired. Please log in again.", "warning");
         navigate("/login");
       } else {
-        setMessage(error.response?.data?.message || "Please try again");
-        window.setTimeout(() => setMessage(""), 2200);
+        const errorMsg = error.response?.data?.message || "Action could not be completed. Please try again.";
+        notifyToast(errorMsg, "error");
       }
     } finally {
       setLoadingAction("");
@@ -88,74 +100,68 @@ function ProductActions({ productId, showText = false }) {
 
   if (showText) {
     return (
-      <div className="relative flex items-center gap-2">
-        {message && (
-          <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap rounded-md bg-[#202016] px-2 py-0.5 text-[10px] font-bold text-white shadow-md">
-            {message}
-          </div>
-        )}
+      <div className="flex items-center gap-3 w-full">
         <button
           type="button"
           onClick={(e) => handleAction(e, "cart")}
-          disabled={loadingAction === "cart"}
-          className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-[#202016] px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#e7b900] hover:text-[#202016] active:scale-95 disabled:opacity-60 cursor-pointer"
+          disabled={loadingAction === "cart" || !inStock}
+          className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 active:scale-98 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 cursor-pointer"
         >
           <CartIcon className="w-4 h-4" />
-          <span>{loadingAction === "cart" ? "Adding..." : "Add to Cart"}</span>
+          <span>
+            {loadingAction === "cart"
+              ? "Adding..."
+              : inStock
+              ? "Add to Cart"
+              : "Out of Stock"}
+          </span>
         </button>
         <button
           type="button"
           onClick={(e) => handleAction(e, "wishlist")}
           disabled={loadingAction === "wishlist"}
-          aria-label="Add to wishlist"
-          title="Add to wishlist"
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition active:scale-95 cursor-pointer ${
+          aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+          title={inWishlist ? "In Wishlist" : "Add to Wishlist"}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition active:scale-95 cursor-pointer ${
             inWishlist
-              ? "border-rose-400 bg-rose-50 text-rose-600 shadow-sm"
-              : "border-slate-300 bg-white text-slate-700 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
+              ? "border-rose-300 bg-rose-50 text-rose-600 shadow-sm"
+              : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
           }`}
         >
-          <HeartIcon className="w-4 h-4" filled={inWishlist} />
+          <HeartIcon className="w-5 h-5" filled={inWishlist} />
         </button>
       </div>
     );
   }
 
   return (
-    <div className="relative z-10 flex shrink-0 items-center gap-2">
-      {/* Toast Feedback */}
-      {message && (
-        <div className="absolute -top-8 right-0 z-30 whitespace-nowrap rounded-md bg-[#202016] px-2 py-0.5 text-[10px] font-bold text-white shadow-md">
-          {message}
-        </div>
-      )}
-
-      {/* Small Cart Symbol Button - matching reference screenshot */}
+    <div className="relative z-10 flex shrink-0 items-center gap-1.5">
+      {/* Add to cart icon button */}
       <button
         type="button"
         onClick={(e) => handleAction(e, "cart")}
-        disabled={loadingAction === "cart"}
-        aria-label="Add to cart"
-        title="Add to cart"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#202016] text-white shadow-sm transition hover:bg-[#e7b900] hover:text-[#202016] active:scale-90 disabled:opacity-60 cursor-pointer"
+        disabled={loadingAction === "cart" || !inStock}
+        aria-label={inStock ? "Add to cart" : "Out of stock"}
+        title={inStock ? "Add to cart" : "Out of stock"}
+        className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-white shadow-sm transition hover:bg-slate-800 active:scale-95 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer"
       >
-        <CartIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+        <CartIcon className="w-3.5 h-3.5" />
       </button>
 
-      {/* Small Wishlist Symbol Button - afterwards */}
+      {/* Wishlist icon button */}
       <button
         type="button"
         onClick={(e) => handleAction(e, "wishlist")}
         disabled={loadingAction === "wishlist"}
-        aria-label="Add to wishlist"
-        title="Add to wishlist"
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition active:scale-90 cursor-pointer ${
+        aria-label={inWishlist ? "In Wishlist" : "Add to wishlist"}
+        title={inWishlist ? "In Wishlist" : "Add to wishlist"}
+        className={`flex h-8 w-8 items-center justify-center rounded-lg border transition active:scale-95 cursor-pointer ${
           inWishlist
-            ? "border-rose-300 bg-rose-50 text-rose-600 shadow-sm"
-            : "border-slate-300 bg-white text-slate-700 hover:border-rose-400 hover:text-rose-600 hover:bg-rose-50/50"
+            ? "border-rose-200 bg-rose-50 text-rose-600"
+            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
         }`}
       >
-        <HeartIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" filled={inWishlist} />
+        <HeartIcon className="w-3.5 h-3.5" filled={inWishlist} />
       </button>
     </div>
   );
